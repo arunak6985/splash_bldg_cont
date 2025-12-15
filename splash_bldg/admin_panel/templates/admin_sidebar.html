@@ -1,0 +1,69 @@
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">S</div>
+    <div class="logo-text">Splash Admin</div>
+  </div>
+  
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-section-title">Main</div>
+      <div class="nav-item">
+        <a href="{% url 'admin_vacancy_management' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_vacancy_management' %}active{% endif %}">
+          <i class="nav-icon bi bi-speedometer2"></i>
+          <span class="nav-text">Dashboard</span>
+        </a>
+      </div>
+      <div class="nav-item">
+        <a href="{% url 'job_applications' %}" class="nav-link {% if request.resolver_match.url_name == 'job_applications' %}active{% endif %}">
+          <i class="nav-icon bi bi-file-earmark-text"></i>
+          <span class="nav-text">Applications</span>
+        </a>
+      </div>
+      <div class="nav-item">
+        <a href="{% url 'create_job_vacancy' %}" class="nav-link {% if request.resolver_match.url_name == 'create_job_vacancy' %}active{% endif %}">
+          <i class="nav-icon bi bi-plus-circle"></i>
+          <span class="nav-text">Add Job</span>
+        </a>
+      </div>
+      <div class="nav-item">
+        <a href="{% url 'attendance' %}" class="nav-link {% if request.resolver_match.url_name == 'attendance' %}active{% endif %}">
+          <i class="nav-icon bi bi-calendar-check"></i>
+          <span class="nav-text">Attendance</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-title">Configuration</div>
+      <div class="nav-item">
+        <a href="{% url 'job_titles' %}" class="nav-link {% if request.resolver_match.url_name == 'job_titles' %}active{% endif %}">
+          <i class="nav-icon bi bi-briefcase"></i>
+          <span class="nav-text">Job Titles</span>
+        </a>
+      </div>
+      <div class="nav-item">
+        <a href="{% url 'locations' %}" class="nav-link {% if request.resolver_match.url_name == 'locations' %}active{% endif %}">
+          <i class="nav-icon bi bi-geo-alt"></i>
+          <span class="nav-text">Locations</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-title">Other</div>
+      <div class="nav-item">
+        <a href="{% url 'home' %}" class="nav-link">
+          <i class="nav-icon bi bi-house"></i>
+          <span class="nav-text">View Website</span>
+        </a>
+      </div>
+      <div class="nav-item">
+        <a href="{% url 'admin_logout' %}" class="nav-link">
+          <i class="nav-icon bi bi-box-arrow-right"></i>
+          <span class="nav-text">Logout</span>
+        </a>
+      </div>
+    </div>
+  </nav>
+</div>

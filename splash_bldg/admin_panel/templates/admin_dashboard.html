@@ -1,0 +1,405 @@
+{% extends 'site_application/base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard - Splash Building Contractors{% endblock %}
+
+{% block content %}
+<style>
+.admin-wrapper {
+    display: flex;
+    min-height: calc(100vh - 200px);
+    margin-top: 0;
+}
+
+.sidebar {
+    width: 250px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    transition: all 0.3s ease;
+    position: relative;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+}
+
+.sidebar.collapsed {
+    width: 70px;
+}
+
+.sidebar-toggle {
+    position: absolute;
+    top: 15px;
+    right: -15px;
+    background: #47b2e4;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transition: all 0.3s;
+}
+
+.sidebar-toggle:hover {
+    background: #369cc7;
+    transform: scale(1.1);
+}
+
+.sidebar-header {
+    padding: 25px 20px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.05);
+}
+
+.sidebar-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    transition: opacity 0.3s;
+    color: #fff;
+}
+
+.sidebar.collapsed .sidebar-header h3 {
+    opacity: 0;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-menu li {
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.sidebar-menu a {
+    display: flex;
+    align-items: center;
+    padding: 18px 20px;
+    color: rgba(255,255,255,0.9);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.sidebar-menu a:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    padding-left: 25px;
+}
+
+.sidebar-menu a.active {
+    background: #47b2e4;
+    color: #fff;
+}
+
+.sidebar-menu i {
+    font-size: 18px;
+    width: 20px;
+    margin-right: 15px;
+    text-align: center;
+}
+
+.sidebar.collapsed .sidebar-menu a {
+    justify-content: center;
+    padding: 18px 10px;
+}
+
+.sidebar.collapsed .sidebar-menu span {
+    display: none;
+}
+
+.has-submenu .submenu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    background: rgba(0,0,0,0.1);
+}
+
+.has-submenu.open .submenu {
+    max-height: 200px;
+}
+
+.submenu a {
+    padding: 12px 20px 12px 50px !important;
+    font-size: 14px;
+}
+
+.submenu a:hover {
+    background: rgba(255,255,255,0.05) !important;
+    padding-left: 55px !important;
+}
+
+.submenu-arrow {
+    margin-left: auto;
+    transition: transform 0.3s ease;
+}
+
+.has-submenu.open .submenu-arrow {
+    transform: rotate(180deg);
+}
+
+.sidebar.collapsed .has-submenu .submenu {
+    display: none;
+}
+
+.sidebar.collapsed .submenu-arrow {
+    display: none;
+}
+
+.main-content {
+    flex: 1;
+    padding: 40px;
+    background: #f8f9fa;
+}
+
+.page-title {
+    color: #2c3e50;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.page-subtitle {
+    color: #6c757d;
+    font-size: 1.1rem;
+    margin-bottom: 40px;
+}
+
+.dashboard-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+.dashboard-card {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    text-align: center;
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+}
+
+.dashboard-card i {
+    font-size: 3.5rem;
+    color: #47b2e4;
+    margin-bottom: 20px;
+}
+
+.dashboard-card h3 {
+    margin: 0 0 15px 0;
+    color: #2c3e50;
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+.dashboard-card p {
+    margin: 0;
+    color: #6c757d;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 25px;
+}
+
+.stat-card {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    text-align: center;
+    transition: all 0.3s ease;
+    border-left: 4px solid #47b2e4;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #47b2e4;
+    margin-bottom: 8px;
+}
+
+.stat-label {
+    color: #6c757d;
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+@media (max-width: 768px) {
+    .admin-wrapper {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+        position: relative;
+    }
+    
+    .sidebar.collapsed {
+        width: 100%;
+    }
+    
+    .main-content {
+        padding: 20px;
+    }
+}
+</style>
+
+<div class="admin-wrapper">
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <button class="sidebar-toggle" onclick="toggleSidebar()">
+            <i class="bi bi-chevron-left" id="toggle-icon"></i>
+        </button>
+        
+        <div class="sidebar-header">
+            <h3>Admin Panel</h3>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li>
+                <a href="{% url 'admin_vacancy_management' %}" class="active">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'admin_vacancy_management' %}">
+                    <i class="bi bi-briefcase"></i>
+                    <span>Job Vacancies</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'job_applications' %}">
+                    <i class="bi bi-file-earmark-text"></i>
+                    <span>Applications</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'create_job_vacancy' %}">
+                    <i class="bi bi-plus-circle"></i>
+                    <span>Add Job</span>
+                </a>
+            </li>
+            <li class="has-submenu">
+                <a href="#" onclick="toggleSubmenu(this)">
+                    <i class="bi bi-gear"></i>
+                    <span>Configuration</span>
+                    <i class="bi bi-chevron-down submenu-arrow"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="{% url 'job_titles' %}"><i class="bi bi-briefcase"></i><span>Job Titles</span></a></li>
+                    <li><a href="{% url 'locations' %}"><i class="bi bi-geo-alt"></i><span>Locations</span></a></li>
+                    <li><a href="{% url 'employment_types' %}"><i class="bi bi-clock"></i><span>Employment Types</span></a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="{% url 'admin_logout' %}">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>Logout</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <h1 class="page-title">Admin Dashboard</h1>
+        <p class="page-subtitle">Welcome to Splash Building Contractors Admin Panel</p>
+        
+        <!-- Dashboard Cards -->
+        <div class="dashboard-cards">
+            <div class="dashboard-card">
+                <i class="bi bi-briefcase"></i>
+                <h3>Job Management</h3>
+                <p>Create and manage job vacancies for construction projects</p>
+            </div>
+            
+            <div class="dashboard-card">
+                <i class="bi bi-file-earmark-text"></i>
+                <h3>Applications</h3>
+                <p>Review and manage candidate applications</p>
+            </div>
+            
+            <div class="dashboard-card">
+                <i class="bi bi-people"></i>
+                <h3>Candidates</h3>
+                <p>Manage candidate database and profiles</p>
+            </div>
+            
+            <div class="dashboard-card">
+                <i class="bi bi-bar-chart"></i>
+                <h3>Analytics</h3>
+                <p>View hiring statistics and reports</p>
+            </div>
+        </div>
+        
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">{{ active_jobs_count|default:0 }}</div>
+                <div class="stat-label">Active Jobs</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-number">{{ total_applications|default:0 }}</div>
+                <div class="stat-label">Total Applications</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-number">{{ today_applications|default:0 }}</div>
+                <div class="stat-label">Today's Applications</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-number">{{ available_positions|default:0 }}</div>
+                <div class="stat-label">Available Positions</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const toggleIcon = document.getElementById('toggle-icon');
+    
+    sidebar.classList.toggle('collapsed');
+    
+    if (sidebar.classList.contains('collapsed')) {
+        toggleIcon.className = 'bi bi-chevron-right';
+    } else {
+        toggleIcon.className = 'bi bi-chevron-left';
+    }
+}
+
+function toggleSubmenu(element) {
+    const parent = element.parentElement;
+    parent.classList.toggle('open');
+}
+</script>
+{% endblock %}

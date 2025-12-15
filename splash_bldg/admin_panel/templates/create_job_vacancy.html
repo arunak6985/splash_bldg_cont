@@ -1,0 +1,849 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Job Vacancy Details - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-title">
+        <h2>Job Vacancy Details</h2>
+    </div>
+    <div class="page-actions">
+        <button type="button" class="btn btn-primary" onclick="openCreateModal()">
+            <i class="bi bi-plus"></i> Create Job Vacancy
+        </button>
+    </div>
+</div>
+
+<div class="table-container">
+    <div class="table-header">
+        <h3>Table</h3>
+        <div class="table-controls">
+            <input type="text" class="search-input" placeholder="Search..." id="searchInput">
+        </div>
+    </div>
+    
+    <div class="table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>S.NO</th>
+                    <th>JOB TITLE</th>
+                    <th>LOCATION</th>
+                    <th>EMPLOYMENT TYPE</th>
+                    <th>STATUS</th>
+                    <th>ACTIONS</th>
+                </tr>
+            </thead>
+            <tbody id="jobVacanciesTableBody">
+                {% for job in jobs %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ job.title }}</td>
+                    <td>{{ job.location }}</td>
+                    <td>{{ job.get_employment_type_display }}</td>
+                    <td>
+                        <span class="status-badge {% if job.is_active %}status-active{% else %}status-inactive{% endif %}">
+                            {% if job.is_active %}Active{% else %}Inactive{% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="action-btn edit-btn" onclick="editJobVacancy({{ job.id }})">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="action-btn delete-btn" onclick="deleteJobVacancy({{ job.id }})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">No job vacancies found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="table-footer">
+        <div class="entries-info">
+            Showing 1 to {{ jobs|length }} of {{ jobs|length }} entries
+        </div>
+    </div>
+</div>
+
+<!-- Create Job Vacancy Modal -->
+<div class="modal-overlay" id="createJobModal">
+    <div class="modal-container modal-large">
+        <div class="modal-header">
+            <h3>Create Job Vacancy</h3>
+            <button type="button" class="modal-close" onclick="closeCreateModal()">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        <form id="createJobForm" method="post">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="title">Job Title *</label>
+                        <select id="title" name="title" required>
+                            <option value="">Select job title</option>
+                            {% for job_title in job_titles %}
+                            <option value="{{ job_title.name }}">{{ job_title.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="location">Location *</label>
+                        <select id="location" name="location" required>
+                            <option value="">Select location</option>
+                            {% for location in locations %}
+                            <option value="{{ location.name }}">{{ location.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="employment_type">Employment Type *</label>
+                        <select id="employment_type" name="employment_type" required>
+                            <option value="">Select employment type</option>
+                            <option value="full_time">Full Time</option>
+                            <option value="part_time">Part Time</option>
+                            <option value="contract">Contract</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="salary_range">Salary Range</label>
+                        <input type="text" id="salary_range" name="salary_range" placeholder="e.g., AED 5,000 - 8,000">
+                    </div>
+                </div>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="total_positions">Total Positions *</label>
+                        <input type="number" id="total_positions" name="total_positions" min="1" value="1" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="is_active" name="is_active" checked>
+                            <label for="is_active">Active (visible to job seekers)</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Job Description *</label>
+                    <textarea id="description" name="description" rows="4" required placeholder="Describe the job role and responsibilities..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="requirements">Requirements *</label>
+                    <textarea id="requirements" name="requirements" rows="4" required placeholder="List the required qualifications and skills..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeCreateModal()">Close</button>
+                <button type="submit" class="btn btn-primary" id="createSubmitBtn">
+                    <span class="btn-text">Create Job Vacancy</span>
+                    <div class="btn-loader" style="display: none;">
+                        <div class="spinner"></div>
+                    </div>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Job Vacancy Modal -->
+<div class="modal-overlay" id="editJobModal">
+    <div class="modal-container modal-large">
+        <div class="modal-header">
+            <h3>Edit Job Vacancy</h3>
+            <button type="button" class="modal-close" onclick="closeEditModal()">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        <form id="editJobForm">
+            {% csrf_token %}
+            <input type="hidden" id="edit_job_id" name="job_id">
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="edit_title">Job Title *</label>
+                        <select id="edit_title" name="title" required>
+                            <option value="">Select job title</option>
+                            {% for job_title in job_titles %}
+                            <option value="{{ job_title.name }}">{{ job_title.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit_location">Location *</label>
+                        <select id="edit_location" name="location" required>
+                            <option value="">Select location</option>
+                            {% for location in locations %}
+                            <option value="{{ location.name }}">{{ location.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="edit_employment_type">Employment Type *</label>
+                        <select id="edit_employment_type" name="employment_type" required>
+                            <option value="">Select employment type</option>
+                            <option value="full_time">Full Time</option>
+                            <option value="part_time">Part Time</option>
+                            <option value="contract">Contract</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit_salary_range">Salary Range</label>
+                        <input type="text" id="edit_salary_range" name="salary_range" placeholder="e.g., AED 5,000 - 8,000">
+                    </div>
+                </div>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="edit_total_positions">Total Positions *</label>
+                        <input type="number" id="edit_total_positions" name="total_positions" min="1" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="edit_is_active" name="is_active">
+                            <label for="edit_is_active">Active (visible to job seekers)</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit_description">Job Description *</label>
+                    <textarea id="edit_description" name="description" rows="4" required placeholder="Describe the job role and responsibilities..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit_requirements">Requirements *</label>
+                    <textarea id="edit_requirements" name="requirements" rows="4" required placeholder="List the required qualifications and skills..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Close</button>
+                <button type="submit" class="btn btn-primary" id="editSubmitBtn">
+                    <span class="btn-text">Update Job Vacancy</span>
+                    <div class="btn-loader" style="display: none;">
+                        <div class="spinner"></div>
+                    </div>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding: 0 24px;
+}
+
+.page-title h2 {
+    color: #2c3e50;
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.page-actions .btn {
+    background: #4f46e5;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.table-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin: 0 24px;
+}
+
+.table-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.table-header h3 {
+    color: #374151;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.search-input {
+    padding: 8px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    width: 250px;
+    font-size: 14px;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th {
+    background: #f9fafb;
+    padding: 16px 24px;
+    text-align: left;
+    font-weight: 600;
+    color: #374151;
+    font-size: 14px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.data-table td {
+    padding: 16px 24px;
+    border-bottom: 1px solid #f3f4f6;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-active {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-inactive {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 8px;
+    color: #6b7280;
+}
+
+.edit-btn:hover {
+    background: #dbeafe;
+    color: #3b82f6;
+}
+
+.delete-btn:hover {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+.table-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #e5e7eb;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-container {
+    background: white;
+    border-radius: 12px;
+    width: 500px;
+    max-width: 90vw;
+    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-large {
+    width: 800px;
+}
+
+.modal-header {
+    padding: 24px 24px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    color: #1f2937;
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #374151;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none;
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 32px;
+}
+
+.modal-footer {
+    padding: 0 24px 24px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    font-size: 14px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-secondary {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.btn-primary {
+    background: #4f46e5;
+    color: white;
+}
+
+.btn-loader {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top: 2px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<style>
+.select2-container--default .select2-selection--single {
+    height: 48px !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 4px !important;
+    background: white !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 46px !important;
+    color: #6b7280 !important;
+    padding-left: 12px !important;
+    font-size: 14px !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 46px !important;
+    right: 12px !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow b {
+    border-color: #6b7280 transparent transparent transparent !important;
+}
+
+.select2-dropdown {
+    border: 1px solid #d1d5db !important;
+    border-radius: 4px !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+}
+
+.select2-container--default .select2-search--dropdown .select2-search__field {
+    border: 1px solid #d1d5db !important;
+    border-radius: 4px !important;
+    padding: 8px 12px !important;
+    font-size: 14px !important;
+    background: #6366f1 !important;
+    color: white !important;
+}
+
+.select2-container--default .select2-search--dropdown .select2-search__field::placeholder {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.select2-container--default .select2-results__option {
+    padding: 12px 16px !important;
+    font-size: 14px !important;
+    color: #374151 !important;
+    border-bottom: 1px solid #f3f4f6 !important;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: #6366f1 !important;
+    color: white !important;
+}
+
+.select2-container--default .select2-results__option[aria-selected=true] {
+    background-color: #f3f4f6 !important;
+    color: #374151 !important;
+}
+
+.select2-container {
+    width: 100% !important;
+}
+
+.select2-results__options {
+    max-height: 200px !important;
+}
+</style>
+
+<script>
+function openCreateModal() {
+    document.getElementById('createJobModal').style.display = 'flex';
+    
+    // Initialize Select2 for create modal
+    setTimeout(() => {
+        $('#title').select2({
+            placeholder: 'Search job title',
+            allowClear: true,
+            dropdownParent: $('#createJobModal'),
+            language: {
+                searching: function() {
+                    return 'Search job title';
+                }
+            }
+        });
+        
+        $('#location').select2({
+            placeholder: 'Search location',
+            allowClear: true,
+            dropdownParent: $('#createJobModal'),
+            language: {
+                searching: function() {
+                    return 'Search location';
+                }
+            }
+        });
+        
+        $('#employment_type').select2({
+            placeholder: 'Search employment type',
+            allowClear: true,
+            dropdownParent: $('#createJobModal'),
+            language: {
+                searching: function() {
+                    return 'Search employment type';
+                }
+            }
+        });
+    }, 100);
+}
+
+function closeCreateModal() {
+    // Destroy Select2 instances
+    $('#title').select2('destroy');
+    $('#location').select2('destroy');
+    $('#employment_type').select2('destroy');
+    
+    document.getElementById('createJobModal').style.display = 'none';
+    document.getElementById('createJobForm').reset();
+}
+
+function openEditModal() {
+    document.getElementById('editJobModal').style.display = 'flex';
+    
+    // Initialize Select2 for edit modal
+    setTimeout(() => {
+        $('#edit_title').select2({
+            placeholder: 'Search job title',
+            allowClear: true,
+            dropdownParent: $('#editJobModal'),
+            language: {
+                searching: function() {
+                    return 'Search job title';
+                }
+            }
+        });
+        
+        $('#edit_location').select2({
+            placeholder: 'Search location',
+            allowClear: true,
+            dropdownParent: $('#editJobModal'),
+            language: {
+                searching: function() {
+                    return 'Search location';
+                }
+            }
+        });
+        
+        $('#edit_employment_type').select2({
+            placeholder: 'Search employment type',
+            allowClear: true,
+            dropdownParent: $('#editJobModal'),
+            language: {
+                searching: function() {
+                    return 'Search employment type';
+                }
+            }
+        });
+    }, 100);
+}
+
+function closeEditModal() {
+    // Destroy Select2 instances
+    $('#edit_title').select2('destroy');
+    $('#edit_location').select2('destroy');
+    $('#edit_employment_type').select2('destroy');
+    
+    document.getElementById('editJobModal').style.display = 'none';
+    document.getElementById('editJobForm').reset();
+}
+
+document.getElementById('createJobForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const submitBtn = document.getElementById('createSubmitBtn');
+    const btnText = submitBtn.querySelector('.btn-text');
+    const btnLoader = submitBtn.querySelector('.btn-loader');
+    
+    // Show loader
+    btnText.style.display = 'none';
+    btnLoader.style.display = 'flex';
+    submitBtn.disabled = true;
+    
+    const formData = new FormData(this);
+    
+    fetch('{% url "create_job_vacancy" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            closeCreateModal();
+            location.reload();
+        } else {
+            throw new Error('Network response was not ok');
+        }
+    })
+    .catch(error => {
+        // Hide loader on error
+        btnText.style.display = 'block';
+        btnLoader.style.display = 'none';
+        submitBtn.disabled = false;
+        alert('An error occurred. Please try again.');
+    });
+});
+
+function editJobVacancy(jobId) {
+    // Fetch job data and populate edit form
+    fetch(`{% url 'get_job_vacancy' 0 %}`.replace('0', jobId))
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const job = data.job;
+            document.getElementById('edit_job_id').value = job.id;
+            
+            openEditModal();
+            
+            // Populate form fields after Select2 is initialized
+            setTimeout(() => {
+                $('#edit_title').val(job.title).trigger('change');
+                $('#edit_location').val(job.location).trigger('change');
+                $('#edit_employment_type').val(job.employment_type).trigger('change');
+                document.getElementById('edit_salary_range').value = job.salary_range;
+                document.getElementById('edit_total_positions').value = job.total_positions;
+                document.getElementById('edit_is_active').checked = job.is_active;
+                document.getElementById('edit_description').value = job.description;
+                document.getElementById('edit_requirements').value = job.requirements;
+            }, 200);
+        }
+    })
+    .catch(error => {
+        alert('Error loading job data');
+    });
+}
+
+function deleteJobVacancy(jobId) {
+    if (confirm('Are you sure you want to delete this job vacancy?')) {
+        fetch(`{% url 'delete_job_vacancy' 0 %}`.replace('0', jobId), {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message);
+            }
+        });
+    }
+}
+
+// Search functionality
+document.getElementById('searchInput').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const tableRows = document.querySelectorAll('#jobVacanciesTableBody tr');
+    
+    tableRows.forEach(row => {
+        const jobTitle = row.cells[1].textContent.toLowerCase();
+        const location = row.cells[2].textContent.toLowerCase();
+        if (jobTitle.includes(searchTerm) || location.includes(searchTerm)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+});
+
+// Edit form submission
+document.getElementById('editJobForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const submitBtn = document.getElementById('editSubmitBtn');
+    const btnText = submitBtn.querySelector('.btn-text');
+    const btnLoader = submitBtn.querySelector('.btn-loader');
+    
+    // Show loader
+    btnText.style.display = 'none';
+    btnLoader.style.display = 'flex';
+    submitBtn.disabled = true;
+    
+    const formData = new FormData(this);
+    const jobId = document.getElementById('edit_job_id').value;
+    
+    fetch(`{% url 'edit_job_vacancy' 0 %}`.replace('0', jobId), {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Hide loader
+        btnText.style.display = 'block';
+        btnLoader.style.display = 'none';
+        submitBtn.disabled = false;
+        
+        if (data.success) {
+            closeEditModal();
+            location.reload();
+        } else {
+            alert(data.message || 'An error occurred');
+        }
+    })
+    .catch(error => {
+        // Hide loader on error
+        btnText.style.display = 'block';
+        btnLoader.style.display = 'none';
+        submitBtn.disabled = false;
+        alert('An error occurred. Please try again.');
+    });
+});
+</script>
+{% endblock %}

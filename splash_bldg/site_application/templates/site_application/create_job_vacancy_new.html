@@ -1,0 +1,391 @@
+{% extends 'site_application/base.html' %}
+{% load static %}
+
+{% block title %}Create Job Vacancy - Admin Panel{% endblock %}
+
+{% block content %}
+<style>
+.admin-wrapper {
+    display: flex;
+    min-height: calc(100vh - 200px);
+}
+
+.sidebar {
+    width: 250px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    transition: all 0.3s ease;
+    position: relative;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+}
+
+.sidebar-header {
+    padding: 25px 20px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.05);
+}
+
+.sidebar-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-menu li {
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.sidebar-menu a {
+    display: flex;
+    align-items: center;
+    padding: 18px 20px;
+    color: rgba(255,255,255,0.9);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.sidebar-menu a:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    padding-left: 25px;
+}
+
+.sidebar-menu a.active {
+    background: #47b2e4;
+    color: #fff;
+}
+
+.sidebar-menu i {
+    font-size: 18px;
+    width: 20px;
+    margin-right: 15px;
+    text-align: center;
+}
+
+.main-content {
+    flex: 1;
+    padding: 40px;
+    background: #f8f9fa;
+}
+
+.page-title {
+    color: #2c3e50;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 30px;
+}
+
+.form-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    padding: 40px;
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 14px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.3s;
+}
+
+.form-control:focus {
+    border-color: #47b2e4;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(71, 178, 228, 0.1);
+}
+
+.searchable-dropdown {
+    position: relative;
+}
+
+.dropdown-input {
+    cursor: pointer;
+}
+
+.dropdown-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 2px solid #e9ecef;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+}
+
+.dropdown-item {
+    padding: 12px 15px;
+    cursor: pointer;
+    border-bottom: 1px solid #f8f9fa;
+    transition: background 0.2s;
+}
+
+.dropdown-item:hover {
+    background: #f8f9fa;
+}
+
+.dropdown-item.selected {
+    background: #47b2e4;
+    color: white;
+}
+
+.btn-primary {
+    background: #47b2e4;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 16px;
+    transition: all 0.3s;
+}
+
+.btn-primary:hover {
+    background: #369cc7;
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background: #6c757d;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 16px;
+    margin-right: 15px;
+}
+
+.form-check {
+    margin-top: 20px;
+}
+
+.form-check-input {
+    margin-right: 10px;
+}
+
+.row {
+    display: flex;
+    gap: 20px;
+}
+
+.col-md-6 {
+    flex: 1;
+}
+</style>
+
+<div class="admin-wrapper">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h3>Admin Panel</h3>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li>
+                <a href="{% url 'admin_vacancy_management' %}">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'admin_vacancy_management' %}">
+                    <i class="bi bi-briefcase"></i>
+                    <span>Job Vacancies</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'create_job_vacancy' %}" class="active">
+                    <i class="bi bi-plus-circle"></i>
+                    <span>Add Job</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'admin_logout' %}">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>Logout</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <h1 class="page-title">Create New Job Vacancy</h1>
+        
+        <div class="form-card">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="job_title">Job Title *</label>
+                            <div class="searchable-dropdown">
+                                <input type="text" class="form-control dropdown-input" id="job_title_display" placeholder="Search and select job title..." readonly onclick="toggleDropdown('job_title')">
+                                <input type="hidden" name="job_title" id="job_title" required>
+                                <div class="dropdown-list" id="job_title_list">
+                                    {% for title in job_titles %}
+                                    <div class="dropdown-item" data-value="{{ title.id }}" onclick="selectItem('job_title', {{ title.id }}, '{{ title.name }}')">
+                                        {{ title.name }}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="location">Location *</label>
+                            <div class="searchable-dropdown">
+                                <input type="text" class="form-control dropdown-input" id="location_display" placeholder="Search and select location..." readonly onclick="toggleDropdown('location')">
+                                <input type="hidden" name="location" id="location" required>
+                                <div class="dropdown-list" id="location_list">
+                                    {% for location in locations %}
+                                    <div class="dropdown-item" data-value="{{ location.id }}" onclick="selectItem('location', {{ location.id }}, '{{ location.name }}')">
+                                        {{ location.name }}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="employment_type">Employment Type *</label>
+                            <div class="searchable-dropdown">
+                                <input type="text" class="form-control dropdown-input" id="employment_type_display" placeholder="Search and select employment type..." readonly onclick="toggleDropdown('employment_type')">
+                                <input type="hidden" name="employment_type" id="employment_type" required>
+                                <div class="dropdown-list" id="employment_type_list">
+                                    {% for type in employment_types %}
+                                    <div class="dropdown-item" data-value="{{ type.id }}" onclick="selectItem('employment_type', {{ type.id }}, '{{ type.name }}')">
+                                        {{ type.name }}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="total_positions">Total Positions *</label>
+                            <input type="number" class="form-control" name="total_positions" id="total_positions" min="1" value="1" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="salary_range">Salary Range</label>
+                    <input type="text" class="form-control" name="salary_range" id="salary_range" placeholder="e.g., $50,000 - $70,000">
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Job Description *</label>
+                    <textarea class="form-control" name="description" id="description" rows="5" required placeholder="Describe the job responsibilities and requirements..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="requirements">Requirements *</label>
+                    <textarea class="form-control" name="requirements" id="requirements" rows="4" required placeholder="List the job requirements and qualifications..."></textarea>
+                </div>
+                
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" name="is_active" id="is_active" checked>
+                    <label class="form-check-label" for="is_active">
+                        Active (Job will be visible to applicants)
+                    </label>
+                </div>
+                
+                <div style="margin-top: 30px;">
+                    <a href="{% url 'admin_vacancy_management' %}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Create Job Vacancy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleDropdown(fieldName) {
+    const dropdown = document.getElementById(fieldName + '_list');
+    const isVisible = dropdown.style.display === 'block';
+    
+    // Close all dropdowns
+    document.querySelectorAll('.dropdown-list').forEach(list => {
+        list.style.display = 'none';
+    });
+    
+    // Toggle current dropdown
+    dropdown.style.display = isVisible ? 'none' : 'block';
+    
+    if (!isVisible) {
+        // Add search functionality
+        const input = document.getElementById(fieldName + '_display');
+        input.readOnly = false;
+        input.focus();
+        input.addEventListener('input', function() {
+            filterDropdown(fieldName, this.value);
+        });
+    }
+}
+
+function filterDropdown(fieldName, searchTerm) {
+    const items = document.querySelectorAll(`#${fieldName}_list .dropdown-item`);
+    items.forEach(item => {
+        const text = item.textContent.toLowerCase();
+        const matches = text.includes(searchTerm.toLowerCase());
+        item.style.display = matches ? 'block' : 'none';
+    });
+}
+
+function selectItem(fieldName, value, text) {
+    document.getElementById(fieldName).value = value;
+    document.getElementById(fieldName + '_display').value = text;
+    document.getElementById(fieldName + '_display').readOnly = true;
+    document.getElementById(fieldName + '_list').style.display = 'none';
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(event) {
+    if (!event.target.closest('.searchable-dropdown')) {
+        document.querySelectorAll('.dropdown-list').forEach(list => {
+            list.style.display = 'none';
+        });
+        document.querySelectorAll('.dropdown-input').forEach(input => {
+            input.readOnly = true;
+        });
+    }
+});
+</script>
+{% endblock %}

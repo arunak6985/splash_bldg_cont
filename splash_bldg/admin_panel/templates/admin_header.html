@@ -1,0 +1,19 @@
+<!-- Top Bar -->
+<div class="top-bar">
+  <div style="display: flex; align-items: center;">
+    <button class="sidebar-toggle" onclick="toggleSidebar()">
+      <i class="bi bi-list"></i>
+    </button>
+    <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+  </div>
+  
+  <div class="user-menu">
+    <button class="notification-btn">
+      <i class="bi bi-bell"></i>
+      <div class="notification-badge"></div>
+    </button>
+    <div class="user-avatar">
+      {{ user.username|first|upper }}
+    </div>
+  </div>
+</div>

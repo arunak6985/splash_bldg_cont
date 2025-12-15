@@ -1,0 +1,483 @@
+{% extends 'site_application/base.html' %}
+{% load static %}
+
+{% block title %}Attendance Management - Admin Panel{% endblock %}
+
+{% block content %}
+<style>
+.admin-wrapper {
+    display: flex;
+    min-height: calc(100vh - 200px);
+}
+
+.sidebar {
+    width: 250px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    transition: all 0.3s ease;
+    position: relative;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+}
+
+.sidebar-header {
+    padding: 25px 20px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.05);
+}
+
+.sidebar-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-menu li {
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.sidebar-menu a {
+    display: flex;
+    align-items: center;
+    padding: 18px 20px;
+    color: rgba(255,255,255,0.9);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.sidebar-menu a:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    padding-left: 25px;
+}
+
+.sidebar-menu a.active {
+    background: #47b2e4;
+    color: #fff;
+}
+
+.sidebar-menu i {
+    font-size: 18px;
+    width: 20px;
+    margin-right: 15px;
+    text-align: center;
+}
+
+.main-content {
+    flex: 1;
+    padding: 40px;
+    background: #f8f9fa;
+}
+
+.page-title {
+    color: #2c3e50;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 30px;
+}
+
+.content-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    padding: 30px;
+    margin-bottom: 30px;
+}
+
+.upload-section {
+    border: 2px dashed #47b2e4;
+    border-radius: 10px;
+    padding: 30px;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.btn-upload {
+    background: #47b2e4;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    margin: 10px;
+}
+
+.btn-download {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    margin: 10px;
+}
+
+.employee-table {
+    display: none;
+    margin-top: 30px;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.table th, .table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+}
+
+.table th {
+    background: #47b2e4;
+    color: white;
+    font-weight: 600;
+}
+
+.table tr:nth-child(even) {
+    background: #f8f9fa;
+}
+
+.controls {
+    margin: 20px 0;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.form-control {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 5% auto;
+    padding: 30px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 1200px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: black;
+}
+</style>
+
+<div class="admin-wrapper">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h3>Admin Panel</h3>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li>
+                <a href="{% url 'admin_dashboard' %}">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'attendance' %}" class="active">
+                    <i class="bi bi-calendar-check"></i>
+                    <span>Attendance</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'admin_logout' %}">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>Logout</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <h1 class="page-title">Attendance Management</h1>
+        
+        <div class="content-card">
+            <div class="upload-section">
+                <h4>Upload Excel File</h4>
+                <p>Upload attendance Excel file to generate PDF cards</p>
+                <input type="file" id="excelFile" accept=".xlsx,.xls" style="display: none;">
+                <button class="btn-upload" onclick="document.getElementById('excelFile').click()">
+                    <i class="bi bi-upload"></i> Choose Excel File
+                </button>
+                <button class="btn-download" onclick="downloadTemplate()">
+                    <i class="bi bi-download"></i> Download Template
+                </button>
+            </div>
+            
+            <div class="employee-table" id="employeeTable">
+                <h4>Uploaded Employees</h4>
+                <div class="controls">
+                    <label>Year:</label>
+                    <select id="yearSelect" class="form-control">
+                        <option value="2024">2024</option>
+                        <option value="2025" selected>2025</option>
+                        <option value="2026">2026</option>
+                    </select>
+                    
+                    <label>Month:</label>
+                    <select id="monthSelect" class="form-control">
+                        <option value="0">January</option>
+                        <option value="1">February</option>
+                        <option value="2">March</option>
+                        <option value="3">April</option>
+                        <option value="4">May</option>
+                        <option value="5">June</option>
+                        <option value="6">July</option>
+                        <option value="7">August</option>
+                        <option value="8">September</option>
+                        <option value="9">October</option>
+                        <option value="10">November</option>
+                        <option value="11">December</option>
+                    </select>
+                    
+                    <button class="btn-download" onclick="generateAllPDFs()">
+                        <i class="bi bi-file-earmark-pdf"></i> Generate All PDFs
+                    </button>
+                </div>
+                
+                <table class="table" id="employeesTable">
+                    <thead>
+                        <tr>
+                            <th>REF.NO</th>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employeesTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PDF Modal -->
+<div id="pdfModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closePDFModal()">&times;</span>
+        <h3>Attendance Card Preview</h3>
+        <div id="pdfPreview"></div>
+        <div style="text-align: center; margin-top: 20px;">
+            <button class="btn-download" onclick="downloadCurrentPDF()">
+                <i class="bi bi-download"></i> Download PDF
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let employeesData = [];
+let currentEmployee = null;
+
+document.getElementById('excelFile').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const formData = new FormData();
+    formData.append('excel_file', file);
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+    
+    fetch('{% url "attendance" %}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            employeesData = data.employees;
+            displayEmployees();
+            document.getElementById('employeeTable').style.display = 'block';
+            alert(`Successfully loaded ${data.count} employees`);
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Error uploading file: ' + error);
+    });
+});
+
+function displayEmployees() {
+    const tbody = document.getElementById('employeesTableBody');
+    tbody.innerHTML = '';
+    
+    employeesData.forEach((emp, index) => {
+        const row = tbody.insertRow();
+        row.innerHTML = `
+            <td>${emp.ref_no}</td>
+            <td>${emp.name}</td>
+            <td>${emp.cat}</td>
+            <td>
+                <button class="btn-upload" onclick="viewPDF(${index})">
+                    <i class="bi bi-eye"></i> View PDF
+                </button>
+            </td>
+        `;
+    });
+}
+
+function viewPDF(index) {
+    currentEmployee = employeesData[index];
+    const year = document.getElementById('yearSelect').value;
+    const month = document.getElementById('monthSelect').value;
+    
+    // Create PDF preview content
+    const preview = document.getElementById('pdfPreview');
+    preview.innerHTML = `
+        <div style="border: 1px solid #ccc; padding: 20px; background: white;">
+            <h3 style="text-align: center;">SPLASH BUILDING CONTRACTING L.L.C. - U.A.E.</h3>
+            <h4 style="text-align: center;">LABOUR ATTENDANCE CARD FOR THE MONTH OF ${getMonthName(month)} ${year}</h4>
+            <p><strong>NAME:</strong> ${currentEmployee.name} &nbsp;&nbsp;&nbsp; <strong>REF.NO:</strong> ${currentEmployee.ref_no} &nbsp;&nbsp;&nbsp; <strong>CAT:</strong> ${currentEmployee.cat}</p>
+            <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                <tr style="background: #f0f0f0;">
+                    <th style="border: 1px solid #000; padding: 5px;">Date</th>
+                    <th style="border: 1px solid #000; padding: 5px;">P</th>
+                    <th style="border: 1px solid #000; padding: 5px;">OT</th>
+                    <th style="border: 1px solid #000; padding: 5px;">Bonus OT</th>
+                    <th style="border: 1px solid #000; padding: 5px;">Site No.</th>
+                    <th style="border: 1px solid #000; padding: 5px;">Remarks</th>
+                </tr>
+                ${generateDaysRows(year, month, currentEmployee.attendance)}
+            </table>
+        </div>
+    `;
+    
+    document.getElementById('pdfModal').style.display = 'block';
+}
+
+function generateDaysRows(year, month, attendance) {
+    const daysInMonth = new Date(year, parseInt(month) + 1, 0).getDate();
+    let rows = '';
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month, day);
+        const isSunday = date.getDay() === 0;
+        const dayStr = isSunday ? `${day} (SUN)` : day;
+        const pValue = attendance[day] || '';
+        const bgColor = isSunday ? 'background: #ffcccc;' : '';
+        
+        rows += `
+            <tr style="${bgColor}">
+                <td style="border: 1px solid #000; padding: 5px; text-align: center;">${dayStr}</td>
+                <td style="border: 1px solid #000; padding: 5px; text-align: center;">${pValue}</td>
+                <td style="border: 1px solid #000; padding: 5px;"></td>
+                <td style="border: 1px solid #000; padding: 5px;"></td>
+                <td style="border: 1px solid #000; padding: 5px;"></td>
+                <td style="border: 1px solid #000; padding: 5px;"></td>
+            </tr>
+        `;
+    }
+    
+    return rows;
+}
+
+function downloadCurrentPDF() {
+    if (!currentEmployee) return;
+    
+    const year = document.getElementById('yearSelect').value;
+    const month = document.getElementById('monthSelect').value;
+    const attendanceParam = encodeURIComponent(JSON.stringify(currentEmployee.attendance));
+    
+    const url = `{% url "attendance" %}?download=pdf&year=${year}&month=${month}&name=${encodeURIComponent(currentEmployee.name)}&ref_no=${encodeURIComponent(currentEmployee.ref_no)}&cat=${encodeURIComponent(currentEmployee.cat)}&attendance=${attendanceParam}`;
+    
+    window.open(url, '_blank');
+}
+
+function generateAllPDFs() {
+    if (employeesData.length === 0) {
+        alert('Please upload an Excel file first');
+        return;
+    }
+    
+    const year = document.getElementById('yearSelect').value;
+    const month = document.getElementById('monthSelect').value;
+    
+    const formData = new FormData();
+    formData.append('generate_pdfs', 'true');
+    formData.append('employees_data', JSON.stringify(employeesData));
+    formData.append('year', year);
+    formData.append('month', month);
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+    
+    fetch('{% url "attendance" %}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.blob())
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `attendance_cards_${getMonthName(month)}_${year}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+    })
+    .catch(error => {
+        alert('Error generating PDFs: ' + error);
+    });
+}
+
+function downloadTemplate() {
+    const year = document.getElementById('yearSelect').value;
+    const month = document.getElementById('monthSelect').value;
+    
+    const url = `{% url "attendance" %}?download=excel&year=${year}&month=${month}`;
+    window.open(url, '_blank');
+}
+
+function closePDFModal() {
+    document.getElementById('pdfModal').style.display = 'none';
+}
+
+function getMonthName(monthIndex) {
+    const months = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
+                   'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
+    return months[parseInt(monthIndex)];
+}
+
+// Set current month as default
+document.getElementById('monthSelect').value = new Date().getMonth();
+</script>
+{% endblock %}

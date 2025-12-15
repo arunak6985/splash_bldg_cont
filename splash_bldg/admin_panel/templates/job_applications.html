@@ -1,0 +1,216 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Applications - Admin Panel{% endblock %}
+{% block page_title %}Job Applications{% endblock %}
+
+{% block content %}
+
+<!-- Statistics Cards -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-header">
+      <div class="stat-icon blue">
+        <i class="bi bi-file-earmark-text"></i>
+      </div>
+    </div>
+    <div class="stat-value">{{ applications.count }}</div>
+    <div class="stat-label">Total Applications</div>
+  </div>
+  
+  <div class="stat-card">
+    <div class="stat-header">
+      <div class="stat-icon green">
+        <i class="bi bi-calendar-day"></i>
+      </div>
+    </div>
+    <div class="stat-value">{{ today_applications }}</div>
+    <div class="stat-label">Today's Applications</div>
+  </div>
+  
+  <div class="stat-card">
+    <div class="stat-header">
+      <div class="stat-icon yellow">
+        <i class="bi bi-calendar-week"></i>
+      </div>
+    </div>
+    <div class="stat-value">{{ week_applications }}</div>
+    <div class="stat-label">This Week</div>
+  </div>
+  
+  <div class="stat-card">
+    <div class="stat-header">
+      <div class="stat-icon purple">
+        <i class="bi bi-briefcase"></i>
+      </div>
+    </div>
+    <div class="stat-value">{{ unique_jobs }}</div>
+    <div class="stat-label">Jobs Applied For</div>
+  </div>
+</div>
+
+<!-- Applications Table -->
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">Job Applications</h3>
+    <div class="search-box">
+      <i class="bi bi-search search-icon"></i>
+      <input type="text" class="form-control search-input" placeholder="Search applications..." id="searchInput">
+    </div>
+  </div>
+  
+  <div class="card-body" style="padding: 0;">
+    <div class="table-container">
+      <table class="table" id="applicationsTable">
+        <thead>
+          <tr>
+            <th>Applicant</th>
+            <th>Job Position</th>
+            <th>Experience</th>
+            <th>Applied Date</th>
+            <th>Resume</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for application in applications %}
+            <tr>
+              <td>
+                <div>
+                  <div style="font-weight: 600; color: #1e293b; margin-bottom: 4px;">{{ application.full_name }}</div>
+                  <div style="font-size: 12px; color: #64748b; margin-bottom: 2px;">
+                    <i class="bi bi-envelope" style="margin-right: 4px;"></i>{{ application.email }}
+                  </div>
+                  <div style="font-size: 12px; color: #64748b;">
+                    <i class="bi bi-phone" style="margin-right: 4px;"></i>{{ application.phone }}
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div>
+                  <div style="font-weight: 600; color: #1e293b;">{{ application.job_vacancy.title }}</div>
+                  <div style="font-size: 12px; color: #64748b;">{{ application.job_vacancy.location }}</div>
+                </div>
+              </td>
+              <td>
+                <span class="badge badge-primary">{{ application.experience_years }} years</span>
+              </td>
+              <td>
+                <div>
+                  <div style="font-weight: 500; color: #1e293b;">{{ application.applied_at|date:"M d, Y" }}</div>
+                  <div style="font-size: 12px; color: #64748b;">{{ application.applied_at|time:"H:i" }}</div>
+                </div>
+              </td>
+              <td>
+                {% if application.resume %}
+                  <a href="{{ application.resume.url }}" target="_blank" class="btn btn-secondary btn-sm">
+                    <i class="bi bi-download"></i>
+                    Download
+                  </a>
+                {% else %}
+                  <span style="color: #9ca3af; font-size: 12px;">No resume</span>
+                {% endif %}
+              </td>
+              <td>
+                <div style="display: flex; gap: 8px;">
+                  <button class="btn btn-secondary btn-sm" onclick="viewApplication({{ application.id }})">
+                    <i class="bi bi-eye"></i>
+                    View
+                  </button>
+                  <button class="btn btn-primary btn-sm" onclick="contactApplicant('{{ application.email }}')">
+                    <i class="bi bi-envelope"></i>
+                    Contact
+                  </button>
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" style="text-align: center; padding: 48px; color: #64748b;">
+                <i class="bi bi-inbox" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">No Applications Found</div>
+                <div>Applications will appear here when candidates apply for jobs.</div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Application Details Modal -->
+<div id="applicationModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+  <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 12px; padding: 32px; max-width: 600px; width: 90%;">
+    <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 24px;">
+      <h3 style="margin: 0; color: #1e293b;">Application Details</h3>
+      <button onclick="closeModal()" style="background: none; border: none; font-size: 24px; color: #64748b; cursor: pointer;">&times;</button>
+    </div>
+    <div id="applicationDetails">
+      <!-- Application details will be loaded here -->
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Search functionality
+document.getElementById('searchInput').addEventListener('keyup', function() {
+    const searchTerm = this.value.toLowerCase();
+    const tableRows = document.querySelectorAll('#applicationsTable tbody tr');
+    
+    tableRows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+    });
+});
+
+// View application details
+function viewApplication(applicationId) {
+    const modal = document.getElementById('applicationModal');
+    document.getElementById('applicationDetails').innerHTML = `
+        <div style="text-align: center; padding: 20px;">
+            <div style="width: 40px; height: 40px; border: 3px solid #3b82f6; border-top: 3px solid transparent; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+            <div style="margin-top: 16px; color: #64748b;">Loading...</div>
+        </div>
+    `;
+    modal.style.display = 'block';
+    
+    // Simulate loading application details
+    setTimeout(() => {
+        document.getElementById('applicationDetails').innerHTML = `
+            <div style="margin-bottom: 16px;">
+                <strong style="color: #374151;">Application ID:</strong> ${applicationId}
+            </div>
+            <div style="margin-bottom: 16px;">
+                <strong style="color: #374151;">Cover Letter:</strong>
+            </div>
+            <div style="background: #f9fafb; padding: 16px; border-radius: 8px; border: 1px solid #e5e7eb;">
+                Application details would be loaded here via AJAX in a real implementation.
+            </div>
+        `;
+    }, 1000);
+}
+
+// Contact applicant
+function contactApplicant(email) {
+    window.location.href = `mailto:${email}?subject=Regarding Your Job Application`;
+}
+
+// Close modal
+function closeModal() {
+    document.getElementById('applicationModal').style.display = 'none';
+}
+
+// Add CSS for loading animation
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

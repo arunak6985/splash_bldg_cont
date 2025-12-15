@@ -56,12 +56,19 @@
 
         <nav id="navmenu" class="navmenu">
           <ul>
-            <li><a href="#hero" class="active">Home</a></li>
+            <li><a href="{% url 'home' %}" class="active">Home</a></li>
             <li><a href="#about">About</a></li>
             <li><a href="#services">Services</a></li>
             <li><a href="#portfolio">Portfolio</a></li>
             <li><a href="#team">Team</a></li>
             <li><a href="#contact">Contact</a></li>
+            <li><a href="{% url 'careers' %}">Careers</a></li>
+            {% if user.is_staff %}
+            <li><a href="{% url 'admin_vacancy_management' %}">Admin Panel</a></li>
+            <li><a href="{% url 'admin_logout' %}">Logout</a></li>
+            {% else %}
+            <li><a href="{% url 'admin_login' %}">Admin Login</a></li>
+            {% endif %}
           </ul>
           <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
         </nav>
