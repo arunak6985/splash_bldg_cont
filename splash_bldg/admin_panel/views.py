@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
-from .models import JobTitle, Location, EmploymentType, AttendanceRecord
+from .models import JobTitle, Location, EmploymentType, AttendanceRecord, Supervisor, EmployeeAttendance
 from site_application.models import JobVacancy, JobApplication
 from functools import wraps
 
@@ -13,6 +13,14 @@ def custom_staff_required(view_func):
         if not request.user.is_authenticated:
             return redirect('admin_login')
         if not request.user.is_staff:
+            return redirect('admin_login')
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+def supervisor_required(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.session.get('supervisor_id'):
             return redirect('admin_login')
         return view_func(request, *args, **kwargs)
     return _wrapped_view
@@ -161,26 +169,41 @@ def get_job_vacancy(request, job_id):
     })
 
 def admin_login(request):
-    """Custom admin login page"""
+    """Unified login page for admin and supervisors"""
     if request.user.is_authenticated and request.user.is_staff:
         return redirect('admin_vacancy_management')
+    elif request.session.get('supervisor_id'):
+        return redirect('supervisor_dashboard')
     
     if request.method == 'POST':
         username = request.POST['username']
         password = request.POST['password']
-        user = authenticate(request, username=username, password=password)
         
+        # Check admin login first
+        user = authenticate(request, username=username, password=password)
         if user is not None and user.is_staff:
             login(request, user)
             return redirect('admin_vacancy_management')
-        else:
-            messages.error(request, 'Invalid credentials or insufficient permissions.')
+        
+        # Check supervisor login
+        try:
+            supervisor = Supervisor.objects.get(username=username.lower(), password=password)
+            request.session['supervisor_id'] = supervisor.id
+            request.session['supervisor_name'] = supervisor.name
+            return redirect('supervisor_dashboard')
+        except Supervisor.DoesNotExist:
+            pass
+        
+        messages.error(request, 'Invalid credentials.')
     
     return render(request, 'admin_login.html')
 
 def admin_logout(request):
-    """Admin logout"""
+    """Admin and supervisor logout"""
     logout(request)
+    if 'supervisor_id' in request.session:
+        del request.session['supervisor_id']
+        del request.session['supervisor_name']
     messages.success(request, 'You have been logged out successfully.')
     return redirect('admin_login')
 
@@ -285,17 +308,51 @@ def attendance(request):
             month = request.POST.get('month', 'January')
             year = int(request.POST.get('year', datetime.now().year))
             
-            # Read data from Excel (assuming format: REF.NO, NAME, CAT, then daily attendance)
+            def parse_date(date_value):
+                """Parse date from Excel cell value"""
+                if not date_value:
+                    return None
+                
+                if isinstance(date_value, datetime):
+                    return date_value.date()
+                elif hasattr(date_value, 'date') and callable(date_value.date):
+                    return date_value.date()
+                elif isinstance(date_value, str):
+                    try:
+                        # Clean the date string and try different formats
+                        date_str = str(date_value).strip()
+                        # Handle potential typos like 12025 -> 2025
+                        if '/12025' in date_str:
+                            date_str = date_str.replace('/12025', '/2025')
+                        
+                        for fmt in ['%Y-%m-%d', '%d/%m/%Y', '%m/%d/%Y', '%d-%m-%Y']:
+                            try:
+                                return datetime.strptime(date_str, fmt).date()
+                            except ValueError:
+                                continue
+                    except:
+                        pass
+                return None
+            
+            # Read data from Excel (format: REF.NO, NAME, CAT, NEW JOINING, DUTY STOP, RE JOINING, then daily attendance)
             for row in range(2, ws.max_row + 1):  # Start from row 2 (skip header)
                 ref_no = ws.cell(row=row, column=1).value
                 name = ws.cell(row=row, column=2).value
                 cat = ws.cell(row=row, column=3).value
+                new_joining = ws.cell(row=row, column=4).value
+                duty_stop = ws.cell(row=row, column=5).value
+                re_joining = ws.cell(row=row, column=6).value
                 
                 if ref_no and name:
-                    # Read attendance data for 31 days (columns 4-34)
+                    # Parse date fields
+                    new_joining_date = parse_date(new_joining)
+                    duty_stop_date = parse_date(duty_stop)
+                    re_joining_date = parse_date(re_joining)
+                    
+                    # Read attendance data for 31 days (columns 7-37)
                     attendance_data = {}
                     for day in range(1, 32):  # Days 1-31
-                        col = day + 3  # Column 4 onwards
+                        col = day + 6  # Column 7 onwards (after date fields)
                         if col <= ws.max_column:
                             cell_value = ws.cell(row=row, column=col).value
                             attendance_data[str(day)] = str(cell_value).upper() if cell_value else ''
@@ -308,6 +365,9 @@ def attendance(request):
                         defaults={
                             'name': str(name).strip(),
                             'category': str(cat).strip() if cat else '',
+                            'new_joining': new_joining_date,
+                            'duty_stop': duty_stop_date,
+                            're_joining': re_joining_date,
                             'attendance_data': attendance_data
                         }
                     )
@@ -316,6 +376,9 @@ def attendance(request):
                         'ref_no': str(ref_no).strip(),
                         'name': str(name).strip(),
                         'cat': str(cat).strip() if cat else '',
+                        'new_joining': new_joining_date.strftime('%d/%m/%Y') if new_joining_date else '',
+                        'duty_stop': duty_stop_date.strftime('%d/%m/%Y') if duty_stop_date else '',
+                        're_joining': re_joining_date.strftime('%d/%m/%Y') if re_joining_date else '',
                         'attendance': attendance_data
                     })
             
@@ -791,3 +854,294 @@ def delete_attendance_bulk(request):
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)})
     return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
+@custom_staff_required
+def supervisors(request):
+    supervisors = Supervisor.objects.all()
+    return render(request, 'supervisors.html', {'supervisors': supervisors})
+
+@custom_staff_required
+def add_supervisor(request):
+    if request.method == 'POST':
+        try:
+            employee_id = request.POST.get('employee_id', '').strip()
+            username = request.POST.get('username', '').strip().lower()
+            password = request.POST.get('password', '').strip()
+            
+            # Validate employee ID uniqueness
+            if Supervisor.objects.filter(employee_id=employee_id).exists():
+                return JsonResponse({'success': False, 'message': 'Employee ID already exists'})
+            
+            # Validate username format and uniqueness
+            if not username.endswith('@gmail.com'):
+                return JsonResponse({'success': False, 'message': 'Username must end with @gmail.com'})
+            if Supervisor.objects.filter(username=username).exists():
+                return JsonResponse({'success': False, 'message': 'Username already exists'})
+            
+            # Validate password format
+            import re
+            if not re.match(r'^[A-Z][a-z]+[@#$%^&*][0-9]+$', password):
+                return JsonResponse({'success': False, 'message': 'Password must start with capital letter, followed by lowercase letters, then a symbol (@#$%^&*), then numbers'})
+            
+            supervisor = Supervisor(
+                employee_id=employee_id,
+                name=request.POST.get('name', '').strip(),
+                mobile_number=request.POST.get('mobile_number', '').strip(),
+                site_location=request.POST.get('site_location', '').strip(),
+                username=username,
+                password=password
+            )
+            supervisor.save()
+            return JsonResponse({'success': True, 'message': 'Supervisor added successfully'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    return JsonResponse({'success': False, 'message': 'Invalid request'})
+
+@custom_staff_required
+def get_supervisor(request, supervisor_id):
+    supervisor = get_object_or_404(Supervisor, id=supervisor_id)
+    return JsonResponse({
+        'success': True,
+        'supervisor': {
+            'id': supervisor.id,
+            'employee_id': supervisor.employee_id,
+            'name': supervisor.name,
+            'mobile_number': supervisor.mobile_number,
+            'site_location': supervisor.site_location,
+            'username': supervisor.username,
+            'password': supervisor.password
+        }
+    })
+
+@custom_staff_required
+def edit_supervisor(request, supervisor_id):
+    if request.method == 'POST':
+        try:
+            supervisor = get_object_or_404(Supervisor, id=supervisor_id)
+            employee_id = request.POST.get('employee_id', '').strip()
+            username = request.POST.get('username', '').strip().lower()
+            password = request.POST.get('password', '').strip()
+            
+            # Validate employee ID uniqueness (exclude current supervisor)
+            if Supervisor.objects.filter(employee_id=employee_id).exclude(id=supervisor_id).exists():
+                return JsonResponse({'success': False, 'message': 'Employee ID already exists'})
+            
+            # Validate username format and uniqueness (exclude current supervisor)
+            if not username.endswith('@gmail.com'):
+                return JsonResponse({'success': False, 'message': 'Username must end with @gmail.com'})
+            if Supervisor.objects.filter(username=username).exclude(id=supervisor_id).exists():
+                return JsonResponse({'success': False, 'message': 'Username already exists'})
+            
+            # Validate password format
+            import re
+            if not re.match(r'^[A-Z][a-z]+[@#$%^&*][0-9]+$', password):
+                return JsonResponse({'success': False, 'message': 'Password must start with capital letter, followed by lowercase letters, then a symbol (@#$%^&*), then numbers'})
+            
+            supervisor.employee_id = employee_id
+            supervisor.name = request.POST.get('name', '').strip()
+            supervisor.mobile_number = request.POST.get('mobile_number', '').strip()
+            supervisor.site_location = request.POST.get('site_location', '').strip()
+            supervisor.username = username
+            supervisor.password = password
+            supervisor.save()
+            
+            return JsonResponse({'success': True, 'message': 'Supervisor updated successfully'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
+@custom_staff_required
+def check_employee_id(request):
+    employee_id = request.GET.get('employee_id', '').strip()
+    supervisor_id = request.GET.get('supervisor_id', '')
+    
+    query = Supervisor.objects.filter(employee_id=employee_id)
+    if supervisor_id:
+        query = query.exclude(id=supervisor_id)
+    
+    exists = query.exists()
+    return JsonResponse({'exists': exists})
+
+@custom_staff_required
+def check_username(request):
+    username = request.GET.get('username', '').strip().lower()
+    supervisor_id = request.GET.get('supervisor_id', '')
+    
+    query = Supervisor.objects.filter(username=username)
+    if supervisor_id:
+        query = query.exclude(id=supervisor_id)
+    
+    exists = query.exists()
+    return JsonResponse({'exists': exists})
+
+@custom_staff_required
+def delete_supervisor(request, supervisor_id):
+    if request.method == 'POST':
+        try:
+            supervisor = get_object_or_404(Supervisor, id=supervisor_id)
+            supervisor.delete()
+            return JsonResponse({'success': True, 'message': 'Supervisor deleted successfully'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': 'Error deleting supervisor'})
+    return JsonResponse({'success': False, 'message': 'Invalid request'})
+
+@supervisor_required
+def supervisor_dashboard(request):
+    """Supervisor dashboard with attendance only"""
+    from datetime import datetime
+    import calendar
+    import json
+    
+    # Get attendance records for display
+    selected_month = request.GET.get('month', '')
+    selected_year = request.GET.get('year', '')
+    
+    records = AttendanceRecord.objects.all()
+    if selected_month:
+        records = records.filter(month=selected_month)
+    if selected_year:
+        records = records.filter(year=int(selected_year))
+    
+    context = {
+        'records': records,
+        'selected_month': selected_month,
+        'selected_year': selected_year,
+        'months': ['January', 'February', 'March', 'April', 'May', 'June',
+                  'July', 'August', 'September', 'October', 'November', 'December'],
+        'years': range(2020, 2030),
+        'days_range': range(1, 32),
+        'supervisor_name': request.session.get('supervisor_name', 'Supervisor')
+    }
+    return render(request, 'supervisor_dashboard.html', context)
+
+@custom_staff_required
+def mark_attendance(request):
+    """Mark attendance page with Excel upload and monthly view"""
+    import openpyxl
+    from datetime import datetime, date
+    import calendar
+    
+    def parse_date(date_value):
+        """Parse date from Excel cell value"""
+        if not date_value:
+            return None
+        
+        if isinstance(date_value, datetime):
+            return date_value.date()
+        elif isinstance(date_value, date):
+            return date_value
+        elif isinstance(date_value, str):
+            try:
+                # Try different date formats
+                for fmt in ['%Y-%m-%d', '%d/%m/%Y', '%m/%d/%Y', '%d-%m-%Y']:
+                    try:
+                        return datetime.strptime(date_value.strip(), fmt).date()
+                    except ValueError:
+                        continue
+            except:
+                pass
+        return None
+    
+    if request.method == 'POST' and request.FILES.get('excel_file'):
+        try:
+            excel_file = request.FILES['excel_file']
+            month = request.POST.get('month')
+            year = int(request.POST.get('year'))
+            
+            wb = openpyxl.load_workbook(excel_file)
+            ws = wb.active
+            
+            employees = []
+            
+            # Read data from Excel (assuming headers: REF NO, Name, CATEGORY, JOINING DATE, RE JOINING)
+            for row in range(2, ws.max_row + 1):
+                ref_no = ws.cell(row=row, column=1).value  # REF NO
+                name = ws.cell(row=row, column=2).value    # Name
+                category = ws.cell(row=row, column=3).value # Category
+                joining_date = ws.cell(row=row, column=4).value  # Joining Date
+                rejoining_date = ws.cell(row=row, column=5).value # Re-joining Date
+                
+                if ref_no and name:
+                    # Parse dates
+                    parsed_joining_date = parse_date(joining_date)
+                    parsed_rejoining_date = parse_date(rejoining_date)
+                    
+                    # Create empty attendance data for the month
+                    attendance_data = {}
+                    days_in_month = calendar.monthrange(year, datetime.strptime(month, '%B').month)[1]
+                    
+                    for day in range(1, days_in_month + 1):
+                        attendance_data[str(day)] = {'attendance': '', 'overtime': ''}
+                    
+                    # Save to database
+                    EmployeeAttendance.objects.update_or_create(
+                        ref_no=str(ref_no).strip(),
+                        month=month,
+                        year=year,
+                        defaults={
+                            'name': str(name).strip(),
+                            'category': str(category).strip() if category else '',
+                            'joining_date': parsed_joining_date,
+                            'rejoining_date': parsed_rejoining_date,
+                            'attendance_data': attendance_data
+                        }
+                    )
+                    
+                    employees.append({
+                        'ref_no': str(ref_no).strip(),
+                        'name': str(name).strip(),
+                        'category': str(category).strip() if category else '',
+                        'joining_date': parsed_joining_date.strftime('%d/%m/%Y') if parsed_joining_date else '',
+                        'rejoining_date': parsed_rejoining_date.strftime('%d/%m/%Y') if parsed_rejoining_date else '',
+                        'attendance': attendance_data
+                    })
+            
+            return JsonResponse({
+                'success': True,
+                'employees': employees,
+                'count': len(employees)
+            })
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    
+    # Handle save attendance data
+    if request.method == 'POST' and 'save_attendance' in request.POST:
+        try:
+            import json
+            attendance_data = json.loads(request.POST.get('attendance_data', '{}'))
+            
+            for ref_no, data in attendance_data.items():
+                try:
+                    employee = EmployeeAttendance.objects.get(
+                        ref_no=ref_no,
+                        month=data['month'],
+                        year=int(data['year'])
+                    )
+                    employee.attendance_data = data['attendance']
+                    employee.save()
+                except EmployeeAttendance.DoesNotExist:
+                    continue
+            
+            return JsonResponse({'success': True, 'message': 'Attendance saved successfully'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    
+    # Get attendance records for display
+    selected_month = request.GET.get('month', '')
+    selected_year = request.GET.get('year', '')
+    
+    records = EmployeeAttendance.objects.all()
+    if selected_month:
+        records = records.filter(month=selected_month)
+    if selected_year:
+        records = records.filter(year=int(selected_year))
+    
+    context = {
+        'records': records,
+        'selected_month': selected_month,
+        'selected_year': selected_year,
+        'months': ['January', 'February', 'March', 'April', 'May', 'June',
+                  'July', 'August', 'September', 'October', 'November', 'December'],
+        'years': range(2020, 2030),
+    }
+    return render(request, 'mark_attendance.html', context)

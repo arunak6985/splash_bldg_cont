@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 from .pdf_views import generate_attendance_pdf
+from .bulk_pdf_views import generate_bulk_pdf
 
 urlpatterns = [
     path('admin-login/', views.admin_login, name='admin_login'),
@@ -26,5 +27,15 @@ urlpatterns = [
     path('attendance/', views.attendance, name='attendance'),
     path('attendance/delete/<int:record_id>/', views.delete_attendance_record, name='delete_attendance_record'),
     path('attendance/delete-bulk/', views.delete_attendance_bulk, name='delete_attendance_bulk'),
+    path('supervisors/', views.supervisors, name='supervisors'),
+    path('add-supervisor/', views.add_supervisor, name='add_supervisor'),
+    path('get-supervisor/<int:supervisor_id>/', views.get_supervisor, name='get_supervisor'),
+    path('edit-supervisor/<int:supervisor_id>/', views.edit_supervisor, name='edit_supervisor'),
+    path('delete-supervisor/<int:supervisor_id>/', views.delete_supervisor, name='delete_supervisor'),
+    path('check-employee-id/', views.check_employee_id, name='check_employee_id'),
+    path('check-username/', views.check_username, name='check_username'),
+    path('supervisor-dashboard/', views.supervisor_dashboard, name='supervisor_dashboard'),
+    path('mark-attendance/', views.mark_attendance, name='mark_attendance'),
     path('attendance/pdf/<int:record_id>/', generate_attendance_pdf, name='generate_attendance_pdf'),
+    path('attendance/bulk-pdf/', generate_bulk_pdf, name='generate_bulk_pdf'),
 ]

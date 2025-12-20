@@ -225,6 +225,29 @@
             border: 1px solid #fecaca;
         }
 
+        .password-input-container {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 4px;
+            border-radius: 4px;
+            transition: color 0.3s ease;
+        }
+
+        .password-toggle:hover {
+            color: #3b82f6;
+        }
+
         @media (max-width: 768px) {
             .login-container {
                 grid-template-columns: 1fr;
@@ -270,7 +293,12 @@
 
             <div class="form-group">
                 <label for="password" class="form-label">Password</label>
-                <input type="password" class="form-control" id="password" name="password" required placeholder="Enter your password">
+                <div class="password-input-container">
+                    <input type="password" class="form-control" id="password" name="password" required placeholder="Enter your password">
+                    <button type="button" class="password-toggle" onclick="togglePassword('password')">
+                        <i class="bi bi-eye" id="password-eye"></i>
+                    </button>
+                </div>
             </div>
 
             <button type="submit" class="btn-login">
@@ -320,6 +348,21 @@
         </ul>
     </div>
 </div>
+
+<script>
+function togglePassword(inputId) {
+    const passwordInput = document.getElementById(inputId);
+    const eyeIcon = document.getElementById(inputId + '-eye');
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        eyeIcon.className = 'bi bi-eye-slash';
+    } else {
+        passwordInput.type = 'password';
+        eyeIcon.className = 'bi bi-eye';
+    }
+}
+</script>
 
 </body>
 </html>

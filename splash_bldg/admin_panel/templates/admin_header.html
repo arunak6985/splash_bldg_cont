@@ -13,7 +13,13 @@
       <div class="notification-badge"></div>
     </button>
     <div class="user-avatar">
-      {{ user.username|first|upper }}
+      {% if user.is_authenticated %}
+        {{ user.username|first|upper }}
+      {% elif supervisor_name %}
+        {{ supervisor_name|first|upper }}
+      {% else %}
+        S
+      {% endif %}
     </div>
   </div>
 </div>

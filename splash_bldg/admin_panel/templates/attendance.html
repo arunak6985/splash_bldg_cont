@@ -6,6 +6,8 @@
 {% block extra_css %}
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 {% endblock %}
 
 {% block content %}
@@ -75,13 +77,14 @@
         <h4>Table</h4>
         <div class="table-actions">
             <button class="btn btn-danger" onclick="deleteSelected()">Delete Selected</button>
-            <button class="btn btn-primary" onclick="generateSelectedPDFs()">Generate PDF</button>
+            <button class="btn btn-primary" onclick="generateSelectedPDFs()">Bulk PDF</button>
+            <button class="btn btn-success" onclick="generateIndividualPDFs()">Individual PDFs</button>
             <button class="btn btn-secondary">Export Excel</button>
         </div>
     </div>
     
 
-
+<div class="card">
     <div class="modern-table-wrapper">
         <table id="attendanceTable" class="table table-striped table-bordered dt-responsive nowrap" style="width:100%">
             <thead>
@@ -90,8 +93,9 @@
                     <th>REF.NO</th>
                     <th>NAME</th>
                     <th>CATEGORY</th>
-                    <th>MONTH/YEAR</th>
-                    <th>Actions</th>
+                    <th>NEW JOINING</th>
+                    <th>DUTY STOP</th>
+                    <th>RE JOINING</th>
                     {% for day in days_range %}
                         <th>{{ day }}</th>
                     {% endfor %}
@@ -104,10 +108,9 @@
                     <td>{{ record.ref_no }}</td>
                     <td>{{ record.name }}</td>
                     <td>{{ record.category }}</td>
-                    <td>{{ record.month }} {{ record.year }}</td>
-                    <td>
-                        <button class="btn btn-sm btn-danger" onclick="deleteRecord({{ record.id }})">Delete</button>
-                    </td>
+                    <td>{{ record.new_joining|date:"d/m/Y"|default:"-" }}</td>
+                    <td>{{ record.duty_stop|date:"d/m/Y"|default:"-" }}</td>
+                    <td>{{ record.re_joining|date:"d/m/Y"|default:"-" }}</td>
                     {% for day in days_range %}
                         <td class="text-center">
                             {% with day_str=day|stringformat:"s" %}
@@ -120,7 +123,7 @@
             </tbody>
         </table>
     </div>
-    
+    </div>
 
 </div>
 {% endif %}
@@ -369,6 +372,11 @@
     color: white;
 }
 
+.btn-success {
+    background: #28a745;
+    color: white;
+}
+
 .btn-sm {
     padding: 4px 8px;
     font-size: 12px;
@@ -471,7 +479,44 @@ function generateSelectedPDFs() {
         return;
     }
     
-    // Generate PDF for each selected record
+    // Generate single PDF with all selected records
+    fetch('/admin/attendance/bulk-pdf/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ record_ids: selected })
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.blob();
+        }
+        throw new Error('Failed to generate PDF');
+    })
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `bulk_attendance_${new Date().getTime()}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+    })
+    .catch(error => {
+        alert('Error generating PDF: ' + error.message);
+    });
+}
+
+function generateIndividualPDFs() {
+    const selected = getSelectedRecords();
+    if (selected.length === 0) {
+        alert('Please select records to generate PDFs');
+        return;
+    }
+    
+    // Generate separate PDF for each selected record
     selected.forEach(recordId => {
         const url = `/admin/attendance/pdf/${recordId}/`;
         window.open(url, '_blank');
