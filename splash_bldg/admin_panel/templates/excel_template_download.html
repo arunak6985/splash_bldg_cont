@@ -1,0 +1,125 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Excel Format & PDF Output Guide - Admin Panel{% endblock %}
+
+{% block extra_css %}
+<style>
+.format-table { font-size: 12px; }
+.format-table th, .format-table td { padding: 8px; text-align: center; border: 1px solid #ddd; }
+.example-box { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 10px 0; }
+.highlight { background: #fff3cd; font-weight: bold; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Excel Input Format -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h4><i class="bi bi-file-earmark-excel"></i> Excel Upload Format</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Column Structure:</h6>
+                    <table class="table table-sm format-table">
+                        <thead>
+                            <tr>
+                                <th>Column</th>
+                                <th>Field</th>
+                                <th>Format</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>A</td><td>REF.NO</td><td>Text/Number</td></tr>
+                            <tr><td>B</td><td>NAME</td><td>Text</td></tr>
+                            <tr><td>C</td><td>CATEGORY</td><td>Text</td></tr>
+                            <tr><td>D</td><td>NEW JOINING</td><td>DD/MM/YYYY</td></tr>
+                            <tr><td>E</td><td>DUTY STOP</td><td>DD/MM/YYYY</td></tr>
+                            <tr><td>F</td><td>RE JOINING</td><td>DD/MM/YYYY</td></tr>
+                            <tr class="highlight"><td>G-AK</td><td>Days 1-31</td><td>P/A/Empty</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h6>Attendance Values:</h6>
+                    <div class="example-box">
+                        <strong>Empty Cell:</strong> Uses default P value (8)<br>
+                        <strong>'P':</strong> Present<br>
+                        <strong>'A':</strong> Absent<br>
+                        <strong>Date Format:</strong> DD/MM/YYYY (e.g., 15/01/2024)
+                    </div>
+                    <h6>Example Row:</h6>
+                    <table class="table table-sm format-table">
+                        <thead>
+                            <tr><th>REF.NO</th><th>NAME</th><th>Day 1</th><th>Day 2</th><th>Day 3</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>101</td><td>John Doe</td><td>(empty)</td><td>P</td><td>A</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF Output Format -->
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h4><i class="bi bi-file-earmark-pdf"></i> PDF Output Format</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>PDF Columns:</h6>
+                    <table class="table table-sm format-table">
+                        <thead>
+                            <tr><th>Column</th><th>Shows</th><th>Example</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>REF.NO</td><td>Employee ID</td><td>101</td></tr>
+                            <tr><td>NAME</td><td>Employee Name</td><td>John Doe</td></tr>
+                            <tr><td>CATEGORY</td><td>Job Category</td><td>Worker</td></tr>
+                            <tr><td>Days 1-31</td><td>P Value or A</td><td>8, P, A</td></tr>
+                            <tr class="highlight"><td>OT</td><td>OT Hours</td><td>2 (for present days)</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h6>PDF Display Logic:</h6>
+                    <div class="example-box">
+                        <strong>Present Day:</strong><br>
+                        - Attendance: Shows P value (8) or 'P'<br>
+                        - OT: Shows 2<br><br>
+                        <strong>Absent Day:</strong><br>
+                        - Attendance: Shows 'A'<br>
+                        - OT: Blank
+                    </div>
+                    <h6>Example PDF Row:</h6>
+                    <table class="table table-sm format-table">
+                        <thead>
+                            <tr><th>Day 1</th><th>OT</th><th>Day 2</th><th>OT</th><th>Day 3</th><th>OT</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>8</td><td>2</td><td>P</td><td>2</td><td>A</td><td></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Download Template -->
+    <div class="card">
+        <div class="card-header">
+            <h4><i class="bi bi-download"></i> Download Template</h4>
+        </div>
+        <div class="card-body text-center">
+            <p>Download the Excel template with proper column structure:</p>
+            <a href="{% url 'download_excel_template' %}" class="btn btn-success btn-lg">
+                <i class="bi bi-file-earmark-excel"></i> Download Excel Template
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

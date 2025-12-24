@@ -170,13 +170,13 @@ def generate_attendance_pdf(request, record_id):
         if joining_day and day < joining_day:
             should_have_attendance = False
         
-        # If employee duty stopped, no attendance after duty stop date
-        if duty_stop_day and day > duty_stop_day:
+        # If employee duty stopped, no attendance from duty stop date onwards (including duty stop date)
+        if duty_stop_day and day >= duty_stop_day:
             should_have_attendance = False
         
         if not should_have_attendance:
-            # Put red "-" for days before joining dates or after duty stop
-            if (joining_day and day < joining_day) or (duty_stop_day and day > duty_stop_day):
+            # Put red "-" for days from duty stop date onwards (including duty stop date)
+            if (joining_day and day < joining_day) or (duty_stop_day and day >= duty_stop_day):
                 p_value = '-'
                 ot_value = '-'
                 bonus_ot_value = '-'
@@ -192,7 +192,7 @@ def generate_attendance_pdf(request, record_id):
                     ot_value = '-'
                     sunday_ot_rows.append(day)  # Track for red color
                 else:
-                    ot_value = '3'
+                    ot_value = '2'
             elif attendance_value == 'A':
                 # A means Absent: put red "-" in columns
                 p_value = '-'

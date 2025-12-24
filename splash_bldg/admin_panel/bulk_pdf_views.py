@@ -17,13 +17,22 @@ def generate_bulk_pdf(request):
     """Generate PDF for multiple selected records"""
     if request.method == 'POST':
         try:
-            data = json.loads(request.body)
-            record_ids = data.get('record_ids', [])
+            # Handle both JSON and form data
+            if request.content_type == 'application/json':
+                data = json.loads(request.body)
+                record_ids = data.get('record_ids', [])
+            else:
+                # Handle form data
+                record_ids_str = request.POST.get('record_ids', '[]')
+                record_ids = json.loads(record_ids_str)
             
             if not record_ids:
                 return JsonResponse({'success': False, 'message': 'No records selected'})
             
             records = AttendanceRecord.objects.filter(id__in=record_ids)
+            
+            if not records.exists():
+                return JsonResponse({'success': False, 'message': 'No records found'})
             
             buffer = BytesIO()
             p = canvas.Canvas(buffer, pagesize=A4)
@@ -165,11 +174,11 @@ def generate_single_page(p, record, width, height):
         if joining_day and day < joining_day:
             should_have_attendance = False
         
-        if duty_stop_day and day > duty_stop_day:
+        if duty_stop_day and day >= duty_stop_day:
             should_have_attendance = False
         
         if not should_have_attendance:
-            if (joining_day and day < joining_day) or (duty_stop_day and day > duty_stop_day):
+            if (joining_day and day < joining_day) or (duty_stop_day and day >= duty_stop_day):
                 p_value = '-'
                 ot_value = '-'
                 bonus_ot_value = '-'
@@ -181,7 +190,7 @@ def generate_single_page(p, record, width, height):
                     ot_value = '-'
                     sunday_ot_rows.append(day)  # Track for red color
                 else:
-                    ot_value = '3'
+                    ot_value = '2'
             elif attendance_value == 'A':
                 p_value = '-'
                 ot_value = '-'

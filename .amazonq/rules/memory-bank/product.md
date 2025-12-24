@@ -1,49 +1,55 @@
-# Product Overview
+# Splash Building Contractors - Job Management System
 
-## Project Purpose and Value Proposition
-
-Splash Building Contractors is a professional construction company website built with Django. The platform serves as a comprehensive digital presence for a building contracting business, showcasing services, portfolio, and company information to potential clients.
+## Project Purpose
+A comprehensive Django-based web application for managing construction job vacancies, employee attendance tracking, and administrative operations for Splash Building Contractors. The system serves as a centralized platform for HR management, job posting, application processing, and workforce attendance monitoring.
 
 ## Key Features and Capabilities
 
-### Core Website Features
-- **Professional Portfolio Display**: Masonry-style portfolio gallery showcasing completed construction projects
-- **Service Showcase**: Detailed presentation of construction services offered
-- **Team Presentation**: Professional team member profiles and expertise
-- **Client Testimonials**: Customer feedback and success stories
-- **Contact Management**: Professional contact forms and business information
-- **Responsive Design**: Mobile-first approach ensuring optimal viewing across all devices
+### Job Management
+- Create and manage job vacancies with detailed specifications
+- Track job titles, locations, and position requirements
+- Monitor filled vs. available positions
+- Handle job application submissions and processing
 
-### Technical Capabilities
-- **Django Framework**: Robust backend with admin interface for content management
-- **Modern Frontend**: Bootstrap-based responsive design with custom styling
-- **Interactive Elements**: Smooth scrolling, animations, and lightbox galleries
-- **Performance Optimized**: Efficient asset loading and modern JavaScript libraries
-- **SEO Ready**: Structured HTML with proper meta tags and semantic markup
+### Attendance Management
+- Upload and process employee attendance data via Excel files
+- Generate attendance reports and PDF documents
+- Calendar-based attendance visualization
+- Bulk operations for attendance record management
+- Individual and bulk PDF generation for attendance reports
 
-### Business Applications
-- **Lead Generation**: Contact forms and call-to-action elements
-- **Brand Credibility**: Professional presentation of company capabilities
-- **Project Showcase**: Visual portfolio demonstrating construction expertise
-- **Client Communication**: Multiple contact channels and information display
+### Administrative Panel
+- Secure admin authentication system
+- Dashboard for monitoring system metrics
+- User management and role-based access control
+- File upload and processing capabilities
+- Data export and reporting features
+
+### Application Processing
+- Online job application form submission
+- Resume upload and management
+- Application status tracking
+- Contact form for inquiries
 
 ## Target Users and Use Cases
 
-### Primary Users
-- **Potential Clients**: Homeowners and businesses seeking construction services
-- **Current Clients**: Existing customers reviewing project progress and company updates
-- **Business Partners**: Suppliers and subcontractors evaluating partnership opportunities
-- **Job Seekers**: Professionals interested in career opportunities
+### HR Administrators
+- Post new job openings and manage vacancy details
+- Process incoming job applications
+- Generate attendance and employment reports
+- Monitor workforce metrics and analytics
 
-### Key Use Cases
-- **Service Discovery**: Visitors exploring available construction services
-- **Portfolio Review**: Clients examining previous work quality and style
-- **Contact Initiation**: Prospects reaching out for quotes and consultations
-- **Company Research**: Stakeholders learning about company history and expertise
-- **Mobile Browsing**: Users accessing information on mobile devices during site visits
+### Site Supervisors
+- Upload daily attendance records
+- Track employee presence and absence patterns
+- Generate attendance reports for payroll processing
+- Manage duty schedules and work assignments
 
-### Business Value
-- **Digital Presence**: Professional online representation of construction business
-- **Marketing Tool**: Showcase capabilities to attract new clients
-- **Credibility Building**: Demonstrate expertise through portfolio and testimonials
-- **Lead Conversion**: Convert website visitors into potential clients
+### Job Seekers
+- Browse available job opportunities
+- Submit online applications with resume uploads
+- Contact the company for inquiries
+- View job requirements and company information
+
+## Value Proposition
+Streamlines construction company operations by digitizing job management, attendance tracking, and application processing, reducing manual paperwork and improving operational efficiency while maintaining comprehensive records for compliance and reporting purposes.

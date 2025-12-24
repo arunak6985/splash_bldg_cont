@@ -1,107 +1,145 @@
-# Technology Stack
+# Technology Stack and Development Setup
 
 ## Programming Languages and Versions
 
-### Backend Technologies
-- **Python**: Primary backend language for Django framework
-- **Django 5.2.9**: Web framework for rapid development and clean design
-- **SQLite**: Default database for development (easily configurable for production)
+### Backend
+- **Python**: Primary backend language
+- **Django 5.2.9**: Web framework for rapid development
+- **SQL**: Database queries and schema management
 
-### Frontend Technologies
-- **HTML5**: Semantic markup with modern web standards
-- **CSS3**: Custom styling with SCSS preprocessing capabilities
-- **JavaScript (ES6+)**: Modern JavaScript for interactive functionality
-- **Bootstrap 5**: Responsive CSS framework for mobile-first design
+### Frontend
+- **HTML5**: Markup and structure
+- **CSS3/SCSS**: Styling and responsive design
+- **JavaScript**: Client-side interactivity and AJAX
+- **jQuery**: DOM manipulation and event handling
 
-### Template Engine
-- **Django Template Language**: Server-side template rendering with built-in security features
+### Database
+- **PostgreSQL**: Production database system
+  - Host: localhost
+  - Port: 5432
+  - Database: postgres
+- **SQLite**: Development database (db.sqlite3)
 
 ## Build Systems and Dependencies
 
 ### Python Environment
-- **Virtual Environment**: Isolated Python environment in `env/` directory
-- **pip**: Package manager for Python dependencies
-- **Django**: Core web framework dependency
+- **Virtual Environment**: `env/` directory for isolated dependencies
+- **Package Management**: pip for Python package installation
+- **Django ORM**: Database abstraction and migrations
 
-### Frontend Dependencies
-Located in `static/vendor/` directory:
-- **Bootstrap 5**: CSS framework and JavaScript components
-- **Bootstrap Icons**: Icon font for UI elements
-- **AOS (Animate On Scroll)**: Scroll-triggered animations
-- **GLightbox**: Modern lightbox gallery
-- **Swiper**: Touch-enabled slider/carousel
-- **Isotope Layout**: Masonry and filtering layouts
-- **ImagesLoaded**: Image loading utility
-- **PureCounter**: Animated counters
-- **Waypoints**: Scroll-based triggers
+### Static Asset Management
+- **Static Files**: Served from `splash_bldg/static/`
+- **Media Files**: User uploads stored in `media/`
+- **SCSS Compilation**: Source files in `static/scss/`
+- **Vendor Libraries**: Third-party assets in `static/vendor/`
 
-### Asset Management
-- **Django Static Files**: Built-in static file handling
-- **Vendor Libraries**: Third-party assets organized in vendor directory
-- **Custom Assets**: Project-specific CSS and JavaScript in dedicated directories
+### Key Django Apps
+```python
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth', 
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'site_application',
+    'admin_panel',
+]
+```
+
+### Middleware Stack
+- SecurityMiddleware: Security headers and HTTPS
+- SessionMiddleware: User session management
+- CommonMiddleware: Common HTTP features
+- CsrfViewMiddleware: CSRF protection
+- AuthenticationMiddleware: User authentication
+- MessageMiddleware: Flash messages
+- ClickjackingMiddleware: Clickjacking protection
 
 ## Development Commands
 
-### Environment Setup
+### Project Setup
 ```bash
-# Activate virtual environment (Windows)
+# Activate virtual environment
 env\Scripts\activate
 
-# Install Django (if not already installed)
-pip install django
+# Install dependencies
+pip install django psycopg2-binary
 
-# Navigate to project directory
-cd splash_bldg
+# Database setup
+python manage.py makemigrations
+python manage.py migrate
+
+# Create superuser
+python manage.py createsuperuser
 ```
 
-### Django Development Commands
+### Development Server
 ```bash
 # Start development server
 python manage.py runserver
 
-# Create database migrations
-python manage.py makemigrations
-
-# Apply database migrations
-python manage.py migrate
-
-# Create superuser for admin access
-python manage.py createsuperuser
-
-# Collect static files (for production)
-python manage.py collectstatic
-
-# Django shell for debugging
-python manage.py shell
+# Run on specific port
+python manage.py runserver 8080
 ```
 
 ### Database Management
 ```bash
-# Reset database (development)
-python manage.py flush
+# Create migrations
+python manage.py makemigrations admin_panel
+python manage.py makemigrations site_application
 
-# Load initial data (if fixtures exist)
-python manage.py loaddata fixture_name
+# Apply migrations
+python manage.py migrate
 
-# Database shell access
+# Database shell
 python manage.py dbshell
 ```
 
-### Development Workflow
-1. **Activate Environment**: `env\Scripts\activate`
-2. **Start Server**: `python manage.py runserver`
-3. **Access Application**: http://127.0.0.1:8000/
-4. **Admin Interface**: http://127.0.0.1:8000/admin/
+### Static Files
+```bash
+# Collect static files for production
+python manage.py collectstatic
 
-### Project Configuration
-- **Settings**: Configuration in `splash_bldg/settings.py`
-- **URL Routing**: Main routing in `splash_bldg/urls.py`
-- **Static Files**: Served from `splash_bldg/static/` during development
-- **Templates**: App-specific templates in respective app directories
+# Development static files served automatically
+```
 
-### Production Considerations
-- **Environment Variables**: Use environment-specific settings
-- **Database**: Configure PostgreSQL or MySQL for production
-- **Static Files**: Use CDN or web server for static file serving
-- **Security**: Update SECRET_KEY and disable DEBUG mode
-- **WSGI/ASGI**: Deploy using Gunicorn, uWSGI, or similar WSGI server
+## Configuration Details
+
+### Database Configuration
+```python
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'postgres', 
+        'PASSWORD': 'pass@272000',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}
+```
+
+### File Upload Settings
+```python
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+```
+
+### Security Settings
+- DEBUG = True (development)
+- SECRET_KEY configured
+- CSRF protection enabled
+- Custom login URL: '/admin-login/'
+- Login redirect: '/admin-vacancy-management/'
+
+### Template Configuration
+- App-based template discovery
+- Context processors for request, auth, messages
+- Template inheritance for consistent layouts
+
+## Development Environment
+- **IDE**: Compatible with VS Code, PyCharm
+- **Version Control**: Git-based workflow
+- **Operating System**: Windows development environment
+- **Browser Testing**: Modern browsers with JavaScript support

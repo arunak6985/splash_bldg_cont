@@ -1,104 +1,112 @@
-# Project Structure
+# Project Structure and Architecture
 
-## Directory Structure and Organization
+## Directory Structure
 
-### Root Level Structure
 ```
 splash_bldg_cont/
-├── env/                    # Python virtual environment
-├── splash_bldg/           # Main Django project directory
-└── .amazonq/              # Amazon Q configuration and rules
-```
-
-### Django Project Layout
-```
-splash_bldg/
-├── manage.py              # Django management script
-├── splash_bldg/          # Project configuration package
-│   ├── __init__.py
-│   ├── settings.py       # Django settings configuration
-│   ├── urls.py          # Main URL routing
-│   ├── wsgi.py          # WSGI application entry point
-│   ├── asgi.py          # ASGI application entry point
-│   └── static/          # Static assets (CSS, JS, images)
-├── site_application/     # Main website application
-│   ├── migrations/      # Database migrations
-│   ├── templates/       # HTML templates
-│   ├── models.py        # Data models
-│   ├── views.py         # View controllers
-│   ├── urls.py          # App-specific URL patterns
-│   └── admin.py         # Admin interface configuration
-└── admin/               # Custom admin application
-    ├── migrations/      # Admin app migrations
-    ├── templates/       # Admin-specific templates
-    ├── models.py        # Admin data models
-    ├── views.py         # Admin view controllers
-    └── urls.py          # Admin URL patterns
-```
-
-### Static Assets Organization
-```
-static/
-├── css/
-│   └── main.css         # Custom stylesheet
-├── js/
-│   └── main.js          # Custom JavaScript functionality
-├── img/                 # Image assets
-│   ├── clients/         # Client logos
-│   ├── portfolio/       # Portfolio images
-│   ├── team/           # Team member photos
-│   ├── testimonials/   # Testimonial images
-│   └── masonry-portfolio/ # Gallery images
-├── scss/               # SCSS source files
-└── vendor/             # Third-party libraries
-    ├── bootstrap/      # Bootstrap framework
-    ├── aos/           # Animate On Scroll library
-    ├── glightbox/     # Lightbox gallery
-    ├── swiper/        # Touch slider
-    └── isotope-layout/ # Masonry layout
+├── env/                          # Python virtual environment
+├── splash_bldg/                  # Main Django project
+│   ├── admin_panel/              # Admin functionality app
+│   │   ├── migrations/           # Database migrations
+│   │   ├── templates/            # Admin HTML templates
+│   │   ├── templatetags/         # Custom template tags
+│   │   ├── models.py             # Admin data models
+│   │   ├── views.py              # Admin view controllers
+│   │   ├── pdf_views.py          # PDF generation views
+│   │   ├── bulk_pdf_views.py     # Bulk PDF operations
+│   │   └── urls.py               # Admin URL routing
+│   ├── site_application/         # Public site app
+│   │   ├── migrations/           # Database migrations
+│   │   ├── templates/            # Public HTML templates
+│   │   ├── models.py             # Application data models
+│   │   ├── views.py              # Public view controllers
+│   │   └── urls.py               # Public URL routing
+│   ├── splash_bldg/              # Project configuration
+│   │   ├── static/               # Static assets
+│   │   │   ├── css/              # Stylesheets
+│   │   │   ├── js/               # JavaScript files
+│   │   │   ├── img/              # Images
+│   │   │   ├── scss/             # SASS source files
+│   │   │   └── vendor/           # Third-party libraries
+│   │   ├── settings.py           # Django configuration
+│   │   ├── urls.py               # Main URL routing
+│   │   └── wsgi.py               # WSGI application
+│   ├── media/                    # User uploaded files
+│   │   └── resumes/              # Resume file storage
+│   ├── db.sqlite3                # SQLite database (dev)
+│   └── manage.py                 # Django management script
+└── .amazonq/                     # AI assistant configuration
+    └── rules/                    # Project rules and documentation
 ```
 
 ## Core Components and Relationships
 
-### Django Applications
-- **splash_bldg**: Main project configuration and settings
-- **site_application**: Primary website functionality and content
-- **admin**: Custom administrative interface and management tools
+### Django Applications Architecture
 
-### Frontend Architecture
-- **Bootstrap Framework**: Responsive grid system and UI components
-- **Custom CSS**: Brand-specific styling and layout customizations
-- **JavaScript Libraries**: Interactive features and animations
-- **Static Asset Management**: Organized vendor and custom assets
+#### admin_panel App
+- **Purpose**: Administrative interface for HR and management operations
+- **Key Models**: AttendanceRecord, EmployeeAttendance, Supervisor
+- **Responsibilities**: 
+  - User authentication and session management
+  - Attendance data processing and visualization
+  - PDF report generation (individual and bulk)
+  - Job vacancy management
+  - Excel file upload and processing
 
-### Data Flow
-1. **URL Routing**: Main urls.py routes to application-specific URL patterns
-2. **View Processing**: Django views handle request logic and template rendering
-3. **Template Rendering**: HTML templates with Django template language
-4. **Static Serving**: CSS, JavaScript, and images served through Django static files
+#### site_application App  
+- **Purpose**: Public-facing website for job seekers
+- **Key Models**: JobVacancy, JobApplication, Contact, JobTitle, Location
+- **Responsibilities**:
+  - Job listing display and management
+  - Application form processing
+  - Resume file handling
+  - Contact form submissions
+
+#### splash_bldg Configuration
+- **Purpose**: Project-wide settings and URL routing
+- **Components**:
+  - Database configuration (PostgreSQL)
+  - Static file management
+  - Media file handling
+  - Security settings
+
+### Data Flow Architecture
+
+```
+User Request → URLs → Views → Models → Database
+                ↓
+            Templates ← Context Data
+                ↓
+            HTTP Response
+```
+
+### File Processing Pipeline
+
+```
+Excel Upload → Validation → Data Parsing → Model Creation → Database Storage
+                                    ↓
+PDF Generation ← Template Rendering ← Data Retrieval
+```
 
 ## Architectural Patterns
 
-### Django MVC Pattern
-- **Models**: Data structure and database interaction (models.py)
-- **Views**: Business logic and request handling (views.py)
-- **Templates**: Presentation layer with HTML templates
-- **URLs**: Request routing and URL pattern matching
+### Model-View-Template (MVT)
+- **Models**: Define data structure and business logic
+- **Views**: Handle request processing and response generation  
+- **Templates**: Render HTML with dynamic content
 
-### Frontend Architecture
-- **Component-Based**: Modular CSS and JavaScript components
-- **Progressive Enhancement**: Core functionality without JavaScript dependencies
-- **Responsive Design**: Mobile-first approach with Bootstrap grid
-- **Asset Optimization**: Minified vendor libraries and organized custom code
+### Separation of Concerns
+- **admin_panel**: Internal operations and management
+- **site_application**: External user interactions
+- **static**: Client-side assets and styling
+- **media**: User-generated content storage
 
-### Development Environment
-- **Virtual Environment**: Isolated Python dependencies in env/ directory
-- **Django Development Server**: Built-in server for local development
-- **Static File Handling**: Django's static file system for development
-- **Database**: SQLite for development with easy migration to production databases
+### Authentication Flow
+- Custom login system with session management
+- Role-based access control for admin functions
+- Secure file upload with validation
 
-### Security Architecture
-- **Django Security Middleware**: CSRF protection, XSS prevention
-- **Authentication System**: Django's built-in user authentication
-- **Static File Security**: Proper static file serving configuration
-- **Environment Configuration**: Separate settings for development and production
+### Database Design
+- PostgreSQL for production data storage
+- Django ORM for database abstraction
+- Migration system for schema management

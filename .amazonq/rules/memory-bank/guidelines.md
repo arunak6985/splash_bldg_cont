@@ -1,166 +1,147 @@
-# Development Guidelines
+# Development Guidelines and Standards
 
 ## Code Quality Standards
 
-### Documentation Standards
-- **File Headers**: Include comprehensive docstrings with project information, URLs, and licensing details
-- **Template Attribution**: Maintain original template credits and licensing information in JavaScript files
-- **Function Documentation**: Use JSDoc-style comments for JavaScript functions with clear parameter and return descriptions
-- **Django Comments**: Follow Django's standard comment format with triple quotes and detailed explanations
-- **Inline Comments**: Use descriptive comments for complex logic, business rules, and non-obvious implementations
+### Python/Django Code Formatting
+- **Function Documentation**: Use triple-quoted docstrings for function descriptions (found in 100% of analyzed functions)
+- **Import Organization**: Group imports by type - Django imports first, then local imports, followed by third-party libraries
+- **Line Length**: Keep lines readable, break complex expressions across multiple lines
+- **Variable Naming**: Use descriptive snake_case names (e.g., `attendance_data`, `selected_month`, `days_in_month`)
 
-### Code Formatting Patterns
-- **JavaScript Structure**: Use strict mode with IIFE (Immediately Invoked Function Expression) pattern to avoid global namespace pollution
-- **Python Standards**: Follow PEP 8 standards with proper indentation (4 spaces) and consistent line spacing
-- **String Literals**: Use single quotes for JavaScript strings, double quotes for Python strings
-- **Line Endings**: Consistent use of CRLF line endings across the entire codebase
-- **Indentation**: 2 spaces for JavaScript, 4 spaces for Python, consistent throughout files
+### JavaScript Code Standards
+- **Function Structure**: Use IIFE (Immediately Invoked Function Expression) pattern for main application logic
+- **Strict Mode**: Always use `"use strict";` at the beginning of JavaScript files
+- **Event Handling**: Use `addEventListener` for DOM event binding rather than inline handlers
+- **Variable Declarations**: Use `const` and `let` appropriately, avoid `var`
 
-### Naming Conventions
-- **JavaScript Functions**: Use camelCase naming (e.g., `toggleScrolled`, `mobileNavToogle`, `aosInit`)
-- **Python Variables**: Use snake_case for variables and constants (e.g., `INSTALLED_APPS`, `BASE_DIR`)
-- **CSS Classes**: Use kebab-case with descriptive names (e.g., `mobile-nav-toggle`, `scroll-top`, `filter-active`)
-- **Django Apps**: Use lowercase with underscores for app names (e.g., `site_application`)
-- **HTML IDs**: Use kebab-case for element IDs (e.g., `#header`, `#preloader`, `#navmenu`)
+### HTML/Template Standards
+- **Template Inheritance**: Use Django template inheritance with base templates
+- **CSS Classes**: Use semantic class names with kebab-case (e.g., `mobile-nav-toggle`, `scroll-top`)
+- **Form Handling**: Implement proper CSRF protection for all forms
+- **Responsive Design**: Use Bootstrap classes and custom CSS for mobile-first design
 
 ## Structural Conventions
 
-### Django Project Organization
-- **Settings Configuration**: Centralized configuration in `settings.py` with clear section comments and proper imports
-- **URL Patterns**: Organized with descriptive comments following Django documentation examples
-- **App Structure**: Standard Django app layout with separate models, views, URLs, and admin configurations
-- **Static Files**: Organized under `static/` directory with clear separation between vendor and custom assets
-- **Template Organization**: App-specific templates in respective app directories following Django conventions
+### Django Application Architecture
+- **App Separation**: Maintain clear separation between `admin_panel` (internal) and `site_application` (public) apps
+- **Model Organization**: Place related models in their respective app's `models.py` file
+- **View Decorators**: Use custom decorators like `@custom_staff_required` and `@supervisor_required` for access control
+- **URL Patterns**: Organize URLs by functionality with descriptive names
 
-### JavaScript Architecture
-- **Module Pattern**: Consistent use of IIFE to encapsulate functionality and prevent global scope pollution
-- **Event Handling**: Standardized use of `addEventListener` for DOM events with proper event delegation
-- **DOM Queries**: Consistent use of `querySelector` and `querySelectorAll` for element selection
-- **Function Organization**: Logical grouping of related functionality with clear separation of concerns
-- **Library Integration**: Proper initialization of third-party libraries on window load event
+### File Organization Patterns
+- **Static Files**: Organize by type - `css/`, `js/`, `img/`, `scss/`, `vendor/`
+- **Templates**: Use app-specific template directories with shared base templates
+- **Media Files**: Store user uploads in organized subdirectories (e.g., `resumes/`)
+- **Migrations**: Keep migration files organized by app with descriptive names
 
-### Static Asset Management
-- **Vendor Libraries**: Third-party assets organized in dedicated `vendor/` directory
-- **Custom Assets**: Project-specific CSS and JavaScript in separate directories
-- **Image Organization**: Categorized image assets (clients, portfolio, team, testimonials)
-- **CSS Framework**: Bootstrap integration with custom styling overlay approach
+### Database Design Patterns
+- **Model Properties**: Use `@property` decorators for calculated fields (e.g., `available_positions`)
+- **Meta Classes**: Include ordering and other metadata in model Meta classes
+- **Foreign Keys**: Use `on_delete=models.CASCADE` for dependent relationships
+- **Default Values**: Use `timezone.now` for timestamp fields, not `auto_now_add`
 
-## Implementation Patterns
+## Semantic Patterns
 
-### Django Configuration Patterns
-- **Path Handling**: Use `pathlib.Path` for cross-platform file path compatibility
-- **App Registration**: Custom applications listed after Django built-in applications in `INSTALLED_APPS`
-- **Middleware Order**: Follow Django recommended middleware ordering for security and functionality
-- **Database Configuration**: SQLite for development with proper BASE_DIR path resolution
-- **Static Files**: Proper STATIC_URL configuration for development and production
+### Authentication and Authorization
+- **Custom Decorators**: Implement role-based access control with custom decorators
+- **Session Management**: Use Django sessions for supervisor authentication alongside Django auth
+- **Permission Checks**: Validate user permissions at both view and template levels
+- **Logout Handling**: Clear all session data on logout for security
 
-### JavaScript Interaction Patterns
-- **Library Initialization**: Third-party libraries (AOS, GLightbox, Swiper, Isotope) initialized on window load
-- **Animation Handling**: Consistent animation initialization with proper configuration objects
-- **Mobile Navigation**: Toggle-based mobile menu implementation with class manipulation
-- **Scroll Behavior**: Smooth scrolling implementation with proper event handling and performance considerations
-- **Event Prevention**: Proper use of `preventDefault()` and `stopImmediatePropagation()` for custom behaviors
+### Data Processing Patterns
+- **Excel File Handling**: Use `openpyxl` for Excel file processing with proper error handling
+- **Date Parsing**: Implement flexible date parsing functions to handle multiple formats
+- **JSON Responses**: Return consistent JSON structure with `success` and `message` fields
+- **Bulk Operations**: Support bulk actions for efficiency (delete, PDF generation)
 
-### Frontend Development Patterns
-- **Responsive Design**: Mobile-first approach using Bootstrap framework with custom breakpoints
-- **Progressive Enhancement**: Core functionality works without JavaScript, enhanced with interactive features
-- **Performance Optimization**: Efficient DOM manipulation, lazy loading, and optimized asset delivery
-- **Cross-browser Compatibility**: Modern JavaScript features with consideration for browser support
-- **Accessibility**: Semantic HTML structure with proper ARIA attributes and keyboard navigation
+### PDF Generation Standards
+- **ReportLab Usage**: Use ReportLab for PDF generation with proper styling
+- **Table Formatting**: Apply consistent table styles with borders, colors, and fonts
+- **Layout Management**: Use proper margins and positioning for professional appearance
+- **File Naming**: Use descriptive filenames with relevant data (ref_no, month, year)
 
-## Security and Best Practices
+## Internal API Usage and Patterns
 
-### Django Security
-- **Secret Key Management**: Environment-specific secret keys (development key shown for reference)
-- **Debug Mode**: Properly configured DEBUG setting for development vs production environments
-- **CSRF Protection**: Enabled by default in middleware stack for form security
-- **Password Validation**: Multiple validators ensuring strong password requirements
-- **Middleware Security**: Complete security middleware stack including XFrame protection
-
-### Frontend Security
-- **Event Handling**: Safe event handling with proper prevention of default behaviors
-- **DOM Manipulation**: Secure element selection and class manipulation without innerHTML injection
-- **Third-party Libraries**: Use of established, well-maintained libraries with known security records
-- **Input Validation**: Client-side validation complementing server-side validation
-
-### Development Practices
-- **Virtual Environment**: Isolated Python environment for dependency management
-- **Static File Handling**: Proper static file configuration and serving for development
-- **Template Security**: Django template system with built-in XSS protection
-- **Database Security**: ORM usage preventing SQL injection vulnerabilities
-
-## Code Idioms and Annotations
-
-### Common JavaScript Patterns
-```javascript
-// IIFE Module Pattern (100% of JS files)
-(function() {
-  "use strict";
-  // Module code here
-})();
-
-// Event Listener Pattern (15+ instances)
-element.addEventListener('event', functionName);
-
-// Class Toggle Pattern (8+ instances)
-element.classList.toggle('class-name');
-
-// Scroll-based Functionality (5+ instances)
-window.scrollY > threshold ? addClass : removeClass;
-```
-
-### Django Configuration Patterns
+### Django ORM Patterns
 ```python
-# Path Configuration (settings.py)
-BASE_DIR = Path(__file__).resolve().parent.parent
+# Use update_or_create for upsert operations
+AttendanceRecord.objects.update_or_create(
+    ref_no=ref_no, month=month, year=year,
+    defaults={'name': name, 'attendance_data': data}
+)
 
-# App Registration Pattern
-INSTALLED_APPS = [
-    # Django built-ins first
-    'django.contrib.admin',
-    'django.contrib.auth',
-    # Custom apps last
-    'site_application',
-    'admin',
-]
+# Use get_object_or_404 for single object retrieval
+record = get_object_or_404(AttendanceRecord, id=record_id)
 
-# Middleware Configuration
-MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    # ... standard Django middleware stack
-]
+# Use filter with exists() for existence checks
+exists = Supervisor.objects.filter(username=username).exists()
 ```
 
-### Template and Asset Patterns
+### AJAX Request Handling
 ```javascript
-// Library Initialization Pattern (5+ libraries)
-window.addEventListener('load', initLibrary);
-
-// Configuration Object Pattern
-const config = {
-    duration: 600,
-    easing: 'ease-in-out',
-    once: true
-};
+// Standard AJAX pattern with CSRF protection
+$.ajax({
+    url: url,
+    method: 'POST',
+    data: formData,
+    headers: {'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val()},
+    success: function(response) {
+        if (response.success) {
+            // Handle success
+        } else {
+            alert(response.message);
+        }
+    }
+});
 ```
 
-## Frequency Analysis
+### Form Processing Patterns
+```python
+# Standard form processing with validation
+if request.method == 'POST':
+    try:
+        # Process form data
+        # Validate input
+        # Save to database
+        return JsonResponse({'success': True, 'message': 'Success message'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+```
 
-### JavaScript Implementation Patterns
-- **Event Listeners**: 20+ instances following consistent addEventListener pattern
-- **Class Manipulation**: 15+ instances using classList.toggle/add/remove methods
-- **DOM Queries**: 25+ instances using querySelector/querySelectorAll consistently
-- **Scroll Handlers**: 5+ scroll-based features with performance-optimized implementations
-- **Library Integrations**: 7 third-party libraries with standardized initialization
+## Frequently Used Code Idioms
 
-### Django Architecture Patterns
-- **Standard App Structure**: 2 custom apps following Django conventions
-- **Settings Organization**: Sectioned configuration with 7 middleware components
-- **URL Patterns**: Centralized routing with app-specific URL includes
-- **Static File Organization**: Vendor/custom separation with categorized assets
+### Error Handling
+- **Try-Catch Blocks**: Wrap risky operations in try-except blocks with meaningful error messages
+- **Validation**: Validate user input before processing (file types, data formats, permissions)
+- **Graceful Degradation**: Provide fallbacks when optional features fail (background images, logos)
 
-### Code Quality Metrics
-- **Documentation Coverage**: 100% of JavaScript functions have descriptive comments
-- **Naming Consistency**: 95%+ adherence to established naming conventions
-- **Security Practices**: Complete Django security middleware stack implementation
-- **Responsive Design**: Bootstrap-based mobile-first approach with custom enhancements
+### Data Transformation
+- **String Processing**: Use `.strip()` for cleaning user input, `.upper()` for standardization
+- **Date Handling**: Implement flexible date parsing with multiple format support
+- **JSON Processing**: Use `json.loads()` and `json.dumps()` for data serialization
+
+### UI/UX Patterns
+- **Loading States**: Show loading modals during AJAX operations
+- **Confirmation Dialogs**: Use `confirm()` for destructive operations
+- **Dynamic Content**: Update UI elements based on user actions without page refresh
+- **Responsive Tables**: Implement horizontal scrolling for data tables on mobile devices
+
+## Popular Annotations and Decorators
+
+### Django Decorators
+- `@custom_staff_required`: Custom decorator for admin access control
+- `@supervisor_required`: Custom decorator for supervisor access control
+- `@login_required`: Django built-in for authenticated users
+- `@user_passes_test`: Django built-in for custom permission tests
+
+### Model Annotations
+- `@property`: For calculated model fields
+- `help_text`: For field documentation in admin interface
+- `default=timezone.now`: For timestamp fields
+- `blank=True`: For optional fields
+
+### JavaScript Patterns
+- Event delegation for dynamic content
+- Module pattern with IIFE for encapsulation
+- Progressive enhancement for accessibility
+- Smooth scrolling and animation effects
