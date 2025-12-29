@@ -17,6 +17,26 @@ from django.conf import settings
 def generate_attendance_pdf(request, record_id):
     record = get_object_or_404(AttendanceRecord, id=record_id)
     
+    # Check if employee should have PDF generated for this month
+    month_names = ['January', 'February', 'March', 'April', 'May', 'June',
+                  'July', 'August', 'September', 'October', 'November', 'December']
+    month_num = month_names.index(record.month) + 1
+    
+    # Skip PDF if duty stopped before rejoining in same month and no work days
+    if record.duty_stop and record.re_joining:
+        if (record.duty_stop.year == record.year and record.duty_stop.month == month_num and
+            record.re_joining.year == record.year and record.re_joining.month == month_num):
+            # If duty stopped on 1st and rejoined later, check if there are work days
+            if record.duty_stop.day == 1:
+                # No PDF needed if stopped on 1st day of month
+                return HttpResponse("<script>alert('No attendance record needed - duty stopped on first day of month'); window.close();</script>", content_type='text/html')
+    
+    # Skip PDF if duty stopped before the selected month and no rejoining
+    if record.duty_stop and not record.re_joining:
+        if (record.duty_stop.year < record.year or 
+            (record.duty_stop.year == record.year and record.duty_stop.month < month_num)):
+            return HttpResponse("<script>alert('No attendance record needed - duty stopped before this month'); window.close();</script>", content_type='text/html')
+    
     buffer = BytesIO()
     p = canvas.Canvas(buffer, pagesize=A4)
     width, height = A4
@@ -114,6 +134,8 @@ def generate_attendance_pdf(request, record_id):
     # Add days 1-31 with attendance data
     absent_rows = []
     sunday_ot_rows = []  # Track Sunday OT red symbols
+    holiday_rows = []  # Track Holiday rows for merging
+    medical_rows = []  # Track Medical rows for merging
     
     # Enhanced date logic - consider NEW JOINING, RE JOINING, and DUTY STOP
     joining_day = None
@@ -141,6 +163,7 @@ def generate_attendance_pdf(request, record_id):
             joining_day = 32
     
     # Calculate duty stop day for the current month/year
+    rejoining_day = None
     if record.duty_stop:
         if (record.duty_stop.year == record.year and 
             record.duty_stop.month == month_num):
@@ -151,6 +174,17 @@ def generate_attendance_pdf(request, record_id):
         else:
             duty_stop_day = 0  # Duty stopped before this month
     
+    # Calculate rejoining day for the current month/year
+    if record.re_joining:
+        if (record.re_joining.year == record.year and 
+            record.re_joining.month == month_num):
+            rejoining_day = record.re_joining.day
+        elif (record.re_joining.year < record.year or 
+              (record.re_joining.year == record.year and record.re_joining.month < month_num)):
+            rejoining_day = 1  # Rejoined before this month
+        else:
+            rejoining_day = 32  # Will rejoin after this month
+    
     for day in range(1, days_in_month + 1):
         attendance_value = record.attendance_data.get(str(day), '').strip()
         
@@ -158,6 +192,7 @@ def generate_attendance_pdf(request, record_id):
         p_value = ''
         ot_value = ''
         bonus_ot_value = ''
+        site_no_value = ''
         
         # Check if it's Sunday
         date_obj = datetime(record.year, month_num, day)
@@ -170,22 +205,42 @@ def generate_attendance_pdf(request, record_id):
         if joining_day and day < joining_day:
             should_have_attendance = False
         
-        # If employee duty stopped, no attendance from duty stop date onwards (including duty stop date)
-        if duty_stop_day and day >= duty_stop_day:
+        # If employee duty stopped and not rejoined yet, no attendance
+        if duty_stop_day and day >= duty_stop_day and (not rejoining_day or day < rejoining_day):
             should_have_attendance = False
         
+        # If employee rejoined, has attendance from rejoining day onwards
+        if rejoining_day and day >= rejoining_day:
+            should_have_attendance = True
+        
         if not should_have_attendance:
-            # Put red "-" for days from duty stop date onwards (including duty stop date)
-            if (joining_day and day < joining_day) or (duty_stop_day and day >= duty_stop_day):
+            # Put red "-" for days when employee not working
+            if ((joining_day and day < joining_day) or 
+                (duty_stop_day and day >= duty_stop_day and (not rejoining_day or day < rejoining_day))):
                 p_value = '-'
                 ot_value = '-'
                 bonus_ot_value = '-'
+                site_no_value = '-'
                 absent_rows.append(day)
             else:
                 p_value = ''
                 ot_value = ''
         elif attendance_value:
-            if attendance_value == 'P':
+            if attendance_value == 'H':
+                # H means Holiday: merge P, OT, Bonus OT, Site No. columns with 'HOLIDAY'
+                p_value = 'HOLIDAY'
+                ot_value = ''
+                bonus_ot_value = ''
+                site_no_value = ''
+                holiday_rows.append(day)
+            elif attendance_value == 'M':
+                # M means Medical: merge P, OT, Bonus OT, Site No. columns with 'MEDICAL LEAVE'
+                p_value = 'MEDICAL LEAVE'
+                ot_value = ''
+                bonus_ot_value = ''
+                site_no_value = ''
+                medical_rows.append(day)
+            elif attendance_value == 'P':
                 # P means Present: auto-fill P=8 and OT=3 (but red "-" OT on Sunday)
                 p_value = '8'
                 if is_sunday:
@@ -198,6 +253,7 @@ def generate_attendance_pdf(request, record_id):
                 p_value = '-'
                 ot_value = '-'
                 bonus_ot_value = '-'
+                site_no_value = '-'
                 absent_rows.append(day)
             elif attendance_value.startswith('P='):
                 p_value = attendance_value.split('=')[1].strip()
@@ -227,9 +283,8 @@ def generate_attendance_pdf(request, record_id):
             # Only mark as absent if employee should have attendance
             if should_have_attendance:
                 absent_rows.append(day)
+                site_no_value = '-'
         
-        # Add Site No. value for absent days
-        site_no_value = '-' if day in absent_rows else ''
         table_data.append([str(day), p_value, ot_value, bonus_ot_value, site_no_value, ''])
     
     # Add total row
@@ -267,6 +322,28 @@ def generate_attendance_pdf(request, record_id):
             table.setStyle(TableStyle([
                 ('TEXTCOLOR', (2, row_index), (2, row_index), colors.red),  # OT column only
                 ('FONTNAME', (2, row_index), (2, row_index), 'Helvetica-Bold'),
+            ]))
+    
+    # Merge cells for Holiday rows - yellow text, no background
+    for day in holiday_rows:
+        if day <= days_in_month:
+            row_index = day
+            table.setStyle(TableStyle([
+                ('SPAN', (1, row_index), (4, row_index)),
+                ('TEXTCOLOR', (1, row_index), (4, row_index), colors.yellow),
+                ('FONTNAME', (1, row_index), (4, row_index), 'Helvetica-Bold'),
+                ('ALIGN', (1, row_index), (4, row_index), 'CENTER'),
+            ]))
+    
+    # Merge cells for Medical rows - red text, no background
+    for day in medical_rows:
+        if day <= days_in_month:
+            row_index = day
+            table.setStyle(TableStyle([
+                ('SPAN', (1, row_index), (4, row_index)),
+                ('TEXTCOLOR', (1, row_index), (4, row_index), colors.red),
+                ('FONTNAME', (1, row_index), (4, row_index), 'Helvetica-Bold'),
+                ('ALIGN', (1, row_index), (4, row_index), 'CENTER'),
             ]))
     
     # Mark Sundays in medium dark blue (date box only) - regardless of attendance

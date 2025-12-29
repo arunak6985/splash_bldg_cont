@@ -566,15 +566,34 @@ def attendance(request):
                     
                     # Days of month with Sunday marking and attendance data
                     days_in_month = calendar.monthrange(year, month + 1)[1]
+                    holiday_rows = []
+                    medical_rows = []
+                    absent_rows = []
+                    
                     for day in range(1, days_in_month + 1):
                         date_obj = datetime(year, month + 1, day)
                         is_sunday = date_obj.weekday() == 6
                         day_str = f"{day}" if not is_sunday else f"{day} (SUN)"
                         
                         # Get attendance for this day
-                        p_val = emp.get('attendance', {}).get(day, '')
+                        attendance_val = emp.get('attendance', {}).get(str(day), '')
                         
-                        table_data.append([day_str, p_val, '', '', '', ''])
+                        # Handle special attendance codes
+                        if str(attendance_val).upper() == 'H':
+                            # Holiday - merge columns with HOLIDAY text
+                            table_data.append([day_str, 'HOLIDAY', '', '', '', ''])
+                            holiday_rows.append(day)
+                        elif str(attendance_val).upper() == 'M':
+                            # Medical - merge columns with MEDICAL LEAVE text
+                            table_data.append([day_str, 'MEDICAL LEAVE', '', '', '', ''])
+                            medical_rows.append(day)
+                        elif str(attendance_val).upper() == 'A':
+                            # Absent - red dashes
+                            table_data.append([day_str, '-', '-', '-', '-', ''])
+                            absent_rows.append(day)
+                        else:
+                            # Regular attendance
+                            table_data.append([day_str, attendance_val, '', '', '', ''])
                     
                     table_data.append(['Total', '', '', '', '', ''])
                     
@@ -592,22 +611,40 @@ def attendance(request):
                         ('GRID', (0, 0), (-1, -1), 1, colors.black),
                     ]))
                     
-                    # Mark Sundays and Absent days in red
+                    # Mark Sundays, Absent, Holiday, and Medical days
                     for i in range(1, days_in_month + 1):
                         row_index = i
                         day_str = table_data[row_index][0]
-                        attendance_val = emp.get('attendance', {}).get(str(i), '')
                         
                         if '(SUN)' in str(day_str):
                             table.setStyle(TableStyle([
                                 ('BACKGROUND', (0, row_index), (0, row_index), colors.red),
                                 ('TEXTCOLOR', (0, row_index), (0, row_index), colors.white),
                             ]))
-                        # Mark entire row red if attendance is 'A' (Absent)
-                        if str(attendance_val).upper() == 'A':
+                        
+                        # Mark absent days in red
+                        if i in absent_rows:
                             table.setStyle(TableStyle([
-                                ('BACKGROUND', (0, row_index), (-1, row_index), colors.red),
-                                ('TEXTCOLOR', (0, row_index), (-1, row_index), colors.white),
+                                ('TEXTCOLOR', (1, row_index), (4, row_index), colors.red),
+                                ('FONTNAME', (1, row_index), (4, row_index), 'Helvetica-Bold'),
+                            ]))
+                        
+                        # Merge and style Holiday rows - yellow text, no background
+                        if i in holiday_rows:
+                            table.setStyle(TableStyle([
+                                ('SPAN', (1, row_index), (4, row_index)),
+                                ('TEXTCOLOR', (1, row_index), (4, row_index), colors.yellow),
+                                ('FONTNAME', (1, row_index), (4, row_index), 'Helvetica-Bold'),
+                                ('ALIGN', (1, row_index), (4, row_index), 'CENTER'),
+                            ]))
+                        
+                        # Merge and style Medical rows - red text, no background
+                        if i in medical_rows:
+                            table.setStyle(TableStyle([
+                                ('SPAN', (1, row_index), (4, row_index)),
+                                ('TEXTCOLOR', (1, row_index), (4, row_index), colors.red),
+                                ('FONTNAME', (1, row_index), (4, row_index), 'Helvetica-Bold'),
+                                ('ALIGN', (1, row_index), (4, row_index), 'CENTER'),
                             ]))
                     
                     table.wrapOn(p, width, height)

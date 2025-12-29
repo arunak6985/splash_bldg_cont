@@ -76,7 +76,6 @@
         <div class="right-controls">
             <button class="btn btn-danger" onclick="deleteSelected()">Delete Selected</button>
             <button class="btn btn-primary" onclick="generateSelectedPDFs()">Bulk PDF</button>
-            <button class="btn btn-success" onclick="generateIndividualPDFs()">Individual PDFs</button>
         </div>
     </div>
 
@@ -418,24 +417,6 @@ function generateSelectedPDFs() {
     document.body.appendChild(form);
     form.submit();
     document.body.removeChild(form);
-}
-
-// Generate individual PDFs
-function generateIndividualPDFs() {
-    const selectedIds = Array.from(document.querySelectorAll('.record-checkbox:checked'))
-        .map(cb => cb.value);
-    
-    if (selectedIds.length === 0) {
-        alert('Please select records to generate PDFs');
-        return;
-    }
-    
-    selectedIds.forEach((id, index) => {
-        setTimeout(() => {
-            const url = `/admin/attendance/pdf/${id}/`;
-            window.open(url, '_blank');
-        }, index * 500); // Delay to prevent browser blocking
-    });
 }
 
 // Show format info
@@ -818,22 +799,6 @@ function generateSelectedPDFs() {
     document.body.appendChild(form);
     form.submit();
     document.body.removeChild(form);
-}
-
-function generateIndividualPDFs() {
-    var selected = $('.record-checkbox:checked').map(function() {
-        return this.value;
-    }).get();
-    
-    if (selected.length === 0) {
-        alert('Please select records to generate individual PDFs');
-        return;
-    }
-    
-    // Generate individual PDF for each selected record
-    selected.forEach(function(recordId) {
-        window.open('/admin/attendance/pdf/' + recordId + '/', '_blank');
-    });
 }
 
 let currentRecordId = null;

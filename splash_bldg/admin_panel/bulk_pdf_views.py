@@ -38,7 +38,45 @@ def generate_bulk_pdf(request):
             p = canvas.Canvas(buffer, pagesize=A4)
             width, height = A4
             
-            for i, record in enumerate(records):
+            valid_records = []
+            
+            # Filter out records that shouldn't have PDFs
+            for record in records:
+                month_names = ['January', 'February', 'March', 'April', 'May', 'June',
+                              'July', 'August', 'September', 'October', 'November', 'December']
+                month_num = month_names.index(record.month) + 1
+                
+                # Skip if duty stopped before the selected month and no rejoining
+                if record.duty_stop and not record.re_joining:
+                    if (record.duty_stop.year < record.year or 
+                        (record.duty_stop.year == record.year and record.duty_stop.month < month_num)):
+                        continue  # Skip this record
+                
+                # Skip if duty stopped on 1st day of month and no rejoining in same month
+                if record.duty_stop:
+                    if (record.duty_stop.year == record.year and record.duty_stop.month == month_num):
+                        if record.duty_stop.day == 1 and not record.re_joining:
+                            continue  # Skip this record
+                        # If duty stopped on 1st and rejoined same month, check if rejoining is valid
+                        if record.duty_stop.day == 1 and record.re_joining:
+                            if (record.re_joining.year == record.year and 
+                                record.re_joining.month == month_num and 
+                                record.re_joining.day > 1):
+                                valid_records.append(record)  # Valid - rejoined after 1st
+                            else:
+                                continue  # Skip - no valid work days
+                        else:
+                            valid_records.append(record)  # Valid - duty stopped after 1st
+                    else:
+                        valid_records.append(record)  # Valid - duty stop not in this month
+                else:
+                    valid_records.append(record)  # Valid - no duty stop
+            
+            if not valid_records:
+                return JsonResponse({'success': False, 'message': 'No valid attendance records found for PDF generation'})
+            
+            # Generate PDFs for valid records only
+            for i, record in enumerate(valid_records):
                 if i > 0:
                     p.showPage()  # New page for each record
                 
@@ -59,11 +97,29 @@ def generate_bulk_pdf(request):
 
 def generate_single_page(p, record, width, height):
     """Generate a single PDF page for one attendance record"""
+    
+    # Check if employee should have PDF generated for this month
+    month_names = ['January', 'February', 'March', 'April', 'May', 'June',
+                  'July', 'August', 'September', 'October', 'November', 'December']
+    month_num = month_names.index(record.month) + 1
+    
+    # Skip PDF if duty stopped before rejoining in same month and no work days
+    if record.duty_stop and record.re_joining:
+        if (record.duty_stop.year == record.year and record.duty_stop.month == month_num and
+            record.re_joining.year == record.year and record.re_joining.month == month_num):
+            if record.duty_stop.day == 1:
+                return  # Skip this employee
+    
+    # Skip PDF if duty stopped before the selected month and no rejoining
+    if record.duty_stop and not record.re_joining:
+        if (record.duty_stop.year < record.year or 
+            (record.duty_stop.year == record.year and record.duty_stop.month < month_num)):
+            return  # Skip this employee
     margin = 30
     content_width = width - (2 * margin)
     
-    # Set all lines to light gray with thin width
-    p.setStrokeColor(colors.lightgrey)
+    # Set all lines to black with thin width
+    p.setStrokeColor(colors.black)
     p.setLineWidth(0.5)
     
     # Company header
@@ -158,13 +214,29 @@ def generate_single_page(p, record, width, height):
         else:
             duty_stop_day = 0
     
+    # Calculate rejoining day for the current month/year
+    rejoining_day = None
+    if record.re_joining:
+        if (record.re_joining.year == record.year and 
+            record.re_joining.month == month_num):
+            rejoining_day = record.re_joining.day
+        elif (record.re_joining.year < record.year or 
+              (record.re_joining.year == record.year and record.re_joining.month < month_num)):
+            rejoining_day = 1
+        else:
+            rejoining_day = 32
+    
     # Generate table rows
+    holiday_rows = []
+    medical_rows = []
+    
     for day in range(1, days_in_month + 1):
         attendance_value = record.attendance_data.get(str(day), '').strip()
         
         p_value = ''
         ot_value = ''
         bonus_ot_value = ''
+        site_no_value = ''
         
         date_obj = datetime(record.year, month_num, day)
         is_sunday = date_obj.weekday() == 6
@@ -174,17 +246,38 @@ def generate_single_page(p, record, width, height):
         if joining_day and day < joining_day:
             should_have_attendance = False
         
-        if duty_stop_day and day >= duty_stop_day:
+        # If employee duty stopped and not rejoined yet, no attendance
+        if duty_stop_day and day >= duty_stop_day and (not rejoining_day or day < rejoining_day):
             should_have_attendance = False
         
+        # If employee rejoined, has attendance from rejoining day onwards
+        if rejoining_day and day >= rejoining_day:
+            should_have_attendance = True
+        
         if not should_have_attendance:
-            if (joining_day and day < joining_day) or (duty_stop_day and day >= duty_stop_day):
+            if ((joining_day and day < joining_day) or 
+                (duty_stop_day and day >= duty_stop_day and (not rejoining_day or day < rejoining_day))):
                 p_value = '-'
                 ot_value = '-'
                 bonus_ot_value = '-'
+                site_no_value = '-'
                 absent_rows.append(day)
         elif attendance_value:
-            if attendance_value == 'P':
+            if attendance_value == 'H':
+                # Holiday - merge columns with HOLIDAY text
+                p_value = 'HOLIDAY'
+                ot_value = ''
+                bonus_ot_value = ''
+                site_no_value = ''
+                holiday_rows.append(day)
+            elif attendance_value == 'M':
+                # Medical - merge columns with MEDICAL LEAVE text
+                p_value = 'MEDICAL LEAVE'
+                ot_value = ''
+                bonus_ot_value = ''
+                site_no_value = ''
+                medical_rows.append(day)
+            elif attendance_value == 'P':
                 p_value = '8'
                 if is_sunday:
                     ot_value = '-'
@@ -192,18 +285,52 @@ def generate_single_page(p, record, width, height):
                 else:
                     ot_value = '2'
             elif attendance_value == 'A':
-                p_value = '-'
-                ot_value = '-'
-                bonus_ot_value = '-'
+                p_value = 'ABSENT'
+                ot_value = ''
+                bonus_ot_value = ''
+                site_no_value = ''
                 absent_rows.append(day)
         else:
             if should_have_attendance:
                 absent_rows.append(day)
+                site_no_value = '-'
         
-        site_no_value = '-' if day in absent_rows else ''
         table_data.append([str(day), p_value, ot_value, bonus_ot_value, site_no_value, ''])
     
-    table_data.append(['Total', '', '', '', '', ''])
+    # Calculate totals
+    total_p_days = 0
+    total_ot_hours = 0
+    total_absent_days = 0
+    total_medical_days = 0
+    
+    for day in range(1, days_in_month + 1):
+        attendance_value = record.attendance_data.get(str(day), '').strip()
+        
+        date_obj = datetime(record.year, month_num, day)
+        is_sunday = date_obj.weekday() == 6
+        
+        should_have_attendance = True
+        
+        if joining_day and day < joining_day:
+            should_have_attendance = False
+        
+        if duty_stop_day and day >= duty_stop_day and (not rejoining_day or day < rejoining_day):
+            should_have_attendance = False
+        
+        if rejoining_day and day >= rejoining_day:
+            should_have_attendance = True
+        
+        if should_have_attendance:
+            if attendance_value == 'P':
+                total_p_days += 1
+                if not is_sunday:
+                    total_ot_hours += 2
+            elif attendance_value == 'A':
+                total_absent_days += 1
+            elif attendance_value == 'M':
+                total_medical_days += 1
+    
+    table_data.append(['Total', f'{total_p_days} (D)', f'{total_ot_hours} (H)', '', '', ''])
     
     # Create table
     table = Table(table_data, colWidths=col_widths, rowHeights=18)
@@ -215,20 +342,53 @@ def generate_single_page(p, record, width, height):
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, -1), 9),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
         ('BACKGROUND', (0, -1), (-1, -1), colors.white),
         ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
         ('ALIGN', (5, 0), (5, -1), 'LEFT'),
     ]))
     
-    # Mark absent days - red "-" in individual columns
+    # Track days before joining/rejoining and after duty stop
+    no_work_rows = []
+    sunday_absent_rows = []
+    
+    # Mark absent days - merge columns with ABSENT text in red
     for day in absent_rows:
         if day <= days_in_month:
             row_index = day
-            table.setStyle(TableStyle([
-                ('TEXTCOLOR', (1, row_index), (4, row_index), colors.red),
-                ('FONTNAME', (1, row_index), (4, row_index), 'Helvetica-Bold'),
-            ]))
+            date_obj = datetime(record.year, month_num, day)
+            is_sunday = date_obj.weekday() == 6
+            
+            # Check if this is a no-work day (before joining or after duty stop)
+            is_no_work_day = False
+            if ((joining_day and day < joining_day) or 
+                (duty_stop_day and day >= duty_stop_day and (not rejoining_day or day < rejoining_day))):
+                is_no_work_day = True
+                no_work_rows.append(day)
+            
+            if is_no_work_day:
+                # No work days - separate red dashes in each column
+                table.setStyle(TableStyle([
+                    ('TEXTCOLOR', (1, row_index), (4, row_index), colors.red),
+                    ('FONTNAME', (1, row_index), (4, row_index), 'Helvetica-Bold'),
+                ]))
+            elif is_sunday:
+                sunday_absent_rows.append(day)
+                # Sunday absent - merge P, OT, Bonus OT, Site No columns
+                table.setStyle(TableStyle([
+                    ('SPAN', (1, row_index), (4, row_index)),
+                    ('TEXTCOLOR', (1, row_index), (4, row_index), colors.red),
+                    ('FONTNAME', (1, row_index), (4, row_index), 'Helvetica-Bold'),
+                    ('ALIGN', (1, row_index), (4, row_index), 'CENTER'),
+                ]))
+            else:
+                # Regular absent - merge P, OT, Bonus OT, Site No columns
+                table.setStyle(TableStyle([
+                    ('SPAN', (1, row_index), (4, row_index)),
+                    ('TEXTCOLOR', (1, row_index), (4, row_index), colors.red),
+                    ('FONTNAME', (1, row_index), (4, row_index), 'Helvetica-Bold'),
+                    ('ALIGN', (1, row_index), (4, row_index), 'CENTER'),
+                ]))
     
     # Mark Sunday OT symbols as red in OT column only
     for day in sunday_ot_rows:
@@ -239,16 +399,47 @@ def generate_single_page(p, record, width, height):
                 ('FONTNAME', (2, row_index), (2, row_index), 'Helvetica-Bold'),
             ]))
     
-    # Mark Sundays in medium dark blue - regardless of attendance
+    # Merge and style Holiday rows - no background, black text
+    for day in holiday_rows:
+        if day <= days_in_month:
+            row_index = day
+            table.setStyle(TableStyle([
+                ('SPAN', (1, row_index), (4, row_index)),
+                ('TEXTCOLOR', (1, row_index), (4, row_index), colors.black),
+                ('FONTNAME', (1, row_index), (4, row_index), 'Helvetica-Bold'),
+                ('ALIGN', (1, row_index), (4, row_index), 'CENTER'),
+            ]))
+    
+    # Merge and style Medical rows - no background, black text
+    for day in medical_rows:
+        if day <= days_in_month:
+            row_index = day
+            table.setStyle(TableStyle([
+                ('SPAN', (1, row_index), (4, row_index)),
+                ('TEXTCOLOR', (1, row_index), (4, row_index), colors.black),
+                ('FONTNAME', (1, row_index), (4, row_index), 'Helvetica-Bold'),
+                ('ALIGN', (1, row_index), (4, row_index), 'CENTER'),
+            ]))
+    
+    # Mark Sundays in medium dark blue - date column only, but not for Sunday absent days
     for day in range(1, days_in_month + 1):
         date_obj = datetime(record.year, month_num, day)
         if date_obj.weekday() == 6:
             row_index = day
-            table.setStyle(TableStyle([
-                ('BACKGROUND', (0, row_index), (0, row_index), colors.Color(0.2, 0.4, 0.8)),
-                ('TEXTCOLOR', (0, row_index), (0, row_index), colors.white),
-                ('FONTNAME', (0, row_index), (0, row_index), 'Helvetica-Bold'),
-            ]))
+            if day not in sunday_absent_rows:
+                # Regular Sunday - blue background for all columns
+                table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, row_index), (4, row_index), colors.Color(0.2, 0.4, 0.8)),
+                    ('TEXTCOLOR', (0, row_index), (4, row_index), colors.white),
+                    ('FONTNAME', (0, row_index), (4, row_index), 'Helvetica-Bold'),
+                ]))
+            else:
+                # Sunday absent - only date column blue, absent text remains red
+                table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, row_index), (0, row_index), colors.Color(0.2, 0.4, 0.8)),
+                    ('TEXTCOLOR', (0, row_index), (0, row_index), colors.white),
+                    ('FONTNAME', (0, row_index), (0, row_index), 'Helvetica-Bold'),
+                ]))
     
     table.wrapOn(p, width, height)
     table.drawOn(p, margin, table_start_y - len(table_data) * 18)
@@ -257,13 +448,13 @@ def generate_single_page(p, record, width, height):
     table_height = len(table_data) * 18
     bottom_y = table_start_y - table_height - 5
     
-    # Create bottom section with 6 separate salary columns
+    # Create bottom section with 6 rows and 4 columns
     bottom_data = [
-        ['Engineer\'s Sign', 'Employee Sign', 'No of Days :', 'Basic'],
-        ['', '', '', 'OT'],
-        ['', '', 'Normal OT :', 'Bonus'],
-        ['', '', '', 'Gross Salary'],
-        ['', '', 'Bonus OT :', 'Adv Deduction'],
+        ['Engineer\'s Sign', 'Employee Sign', f'Present            : {total_p_days}', 'Basic'],
+        ['', '', f'Absent             : {total_absent_days}', 'OT'],
+        ['', '', f'Normal OT       : {total_ot_hours}', 'Bonus'],
+        ['', '', f'Medical Leave : {total_medical_days}', 'Gross Salary'],
+        ['', '', 'Bonus OT         : ', 'Adv Deduction'],
         ['', '', '', 'Net Salary']
     ]
     
@@ -275,7 +466,7 @@ def generate_single_page(p, record, width, height):
     bottom_table = Table(bottom_data, colWidths=bottom_col_widths, rowHeights=20)
     
     bottom_table.setStyle(TableStyle([
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
         ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, -1), 9),
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
@@ -285,12 +476,17 @@ def generate_single_page(p, record, width, height):
         ('SPAN', (0, 0), (0, 5)),  # Engineer's Sign spans all 6 rows
         ('SPAN', (1, 0), (1, 5)),  # Employee Sign spans all 6 rows
         ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
-        ('LINEBELOW', (2, 0), (2, 0), 0, colors.white),  # Remove line below No of Days
+        ('LINEBELOW', (2, 0), (2, 0), 0, colors.white),  # Remove line below Present
+        ('LINEBELOW', (2, 1), (2, 1), 0, colors.white),  # Remove line below Absent
         ('LINEBELOW', (2, 2), (2, 2), 0, colors.white),  # Remove line below Normal OT
+        ('LINEBELOW', (2, 3), (2, 3), 0, colors.white),  # Remove line below Medical Leave
         ('LINEBELOW', (2, 4), (2, 4), 0, colors.white),  # Remove line below Bonus OT
+        ('LINEABOVE', (2, 1), (2, 1), 0, colors.white),  # Remove line above Absent
         ('LINEABOVE', (2, 2), (2, 2), 0, colors.white),  # Remove line above Normal OT
+        ('LINEABOVE', (2, 3), (2, 3), 0, colors.white),  # Remove line above Medical Leave
         ('LINEABOVE', (2, 4), (2, 4), 0, colors.white),  # Remove line above Bonus OT
-        ('LINEBELOW', (3, 0), (3, 0), 0.5, colors.lightgrey),  # Keep line below Basic
+        ('SPAN', (2, 5), (2, 5)),  # Make last attendance row span only its own cell
+        ('LINEBELOW', (3, 0), (3, 0), 0.5, colors.black),  # Keep line below Basic
     ]))
     
     # Position and draw bottom table
