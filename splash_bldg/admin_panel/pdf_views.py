@@ -249,11 +249,18 @@ def generate_attendance_pdf(request, record_id):
                 else:
                     ot_value = '2'
             elif attendance_value == 'A':
-                # A means Absent: put red "-" in columns
-                p_value = '-'
-                ot_value = '-'
-                bonus_ot_value = '-'
-                site_no_value = '-'
+                if is_sunday:
+                    # Sunday absent - separate red dashes in each column
+                    p_value = '-'
+                    ot_value = '-'
+                    bonus_ot_value = '-'
+                    site_no_value = '-'
+                else:
+                    # Regular absent - merge columns with ABSENT text
+                    p_value = 'ABSENT'
+                    ot_value = ''
+                    bonus_ot_value = ''
+                    site_no_value = ''
                 absent_rows.append(day)
             elif attendance_value.startswith('P='):
                 p_value = attendance_value.split('=')[1].strip()
@@ -310,10 +317,23 @@ def generate_attendance_pdf(request, record_id):
     for day in absent_rows:
         if day <= days_in_month:
             row_index = day
-            table.setStyle(TableStyle([
-                ('TEXTCOLOR', (1, row_index), (4, row_index), colors.red),  # Columns P, OT, Bonus OT, Site No.
-                ('FONTNAME', (1, row_index), (4, row_index), 'Helvetica-Bold'),
-            ]))
+            date_obj = datetime(record.year, month_num, day)
+            is_sunday = date_obj.weekday() == 6
+            
+            if is_sunday and record.attendance_data.get(str(day), '').strip() == 'A':
+                # Sunday absent - separate red dashes, no merge
+                table.setStyle(TableStyle([
+                    ('TEXTCOLOR', (1, row_index), (4, row_index), colors.red),
+                    ('FONTNAME', (1, row_index), (4, row_index), 'Helvetica-Bold'),
+                ]))
+            else:
+                # Regular absent - merge columns with ABSENT text
+                table.setStyle(TableStyle([
+                    ('SPAN', (1, row_index), (4, row_index)),
+                    ('TEXTCOLOR', (1, row_index), (4, row_index), colors.red),
+                    ('FONTNAME', (1, row_index), (4, row_index), 'Helvetica-Bold'),
+                    ('ALIGN', (1, row_index), (4, row_index), 'CENTER'),
+                ]))
     
     # Mark Sunday OT symbols as red in OT column only
     for day in sunday_ot_rows:
@@ -351,11 +371,21 @@ def generate_attendance_pdf(request, record_id):
         date_obj = datetime(record.year, month_num, day)
         if date_obj.weekday() == 6:
             row_index = day
-            table.setStyle(TableStyle([
-                ('BACKGROUND', (0, row_index), (0, row_index), colors.Color(0.2, 0.4, 0.8)),  # Medium dark blue
-                ('TEXTCOLOR', (0, row_index), (0, row_index), colors.white),
-                ('FONTNAME', (0, row_index), (0, row_index), 'Helvetica-Bold'),
-            ]))
+            attendance_val = record.attendance_data.get(str(day), '').strip()
+            if attendance_val != 'A':  # Not Sunday absent
+                # Regular Sunday - blue background for date column only
+                table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, row_index), (0, row_index), colors.Color(0.2, 0.4, 0.8)),
+                    ('TEXTCOLOR', (0, row_index), (0, row_index), colors.white),
+                    ('FONTNAME', (0, row_index), (0, row_index), 'Helvetica-Bold'),
+                ]))
+            else:
+                # Sunday absent - only date column blue, no background for other columns
+                table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, row_index), (0, row_index), colors.Color(0.2, 0.4, 0.8)),
+                    ('TEXTCOLOR', (0, row_index), (0, row_index), colors.white),
+                    ('FONTNAME', (0, row_index), (0, row_index), 'Helvetica-Bold'),
+                ]))
     
     # Position and draw table
     table_height = len(table_data) * 18
@@ -365,14 +395,50 @@ def generate_attendance_pdf(request, record_id):
     # Bottom section - exact match to full design image
     bottom_y = table_start_y - table_height - 5
     
-    # Create bottom section with 6 separate salary columns
+    # Calculate totals for statistics
+    total_p_days = 0
+    total_ot_hours = 0
+    total_absent_days = 0
+    total_medical_days = 0
+    total_holiday_days = 0
+    
+    for day in range(1, days_in_month + 1):
+        attendance_value = record.attendance_data.get(str(day), '').strip()
+        
+        date_obj = datetime(record.year, month_num, day)
+        is_sunday = date_obj.weekday() == 6
+        
+        should_have_attendance = True
+        
+        if joining_day and day < joining_day:
+            should_have_attendance = False
+        
+        if duty_stop_day and day >= duty_stop_day and (not rejoining_day or day < rejoining_day):
+            should_have_attendance = False
+        
+        if rejoining_day and day >= rejoining_day:
+            should_have_attendance = True
+        
+        if should_have_attendance:
+            if attendance_value == 'P':
+                total_p_days += 1
+                if not is_sunday:
+                    total_ot_hours += 2
+            elif attendance_value == 'A':
+                total_absent_days += 1
+            elif attendance_value == 'M':
+                total_medical_days += 1
+            elif attendance_value == 'H':
+                total_holiday_days += 1
+    
+    # Create bottom section with statistics
     bottom_data = [
-        ['Engineer\'s Sign', 'Employee Sign', 'No of Days :', 'Basic'],
-        ['', '', '', 'OT'],
-        ['', '', 'Normal OT :', 'Bonus'],
-        ['', '', '', 'Gross Salary'],
-        ['', '', 'Bonus OT :', 'Adv Deduction'],
-        ['', '', '', 'Net Salary']
+        ['Engineer\'s Sign', 'Employee Sign', f'Present            : {total_p_days}', 'Basic'],
+        ['', '', f'Absent             : {total_absent_days}', 'OT'],
+        ['', '', f'Holiday            : {total_holiday_days}', 'Bonus'],
+        ['', '', f'Medical Leave : {total_medical_days}', 'Gross Salary'],
+        ['', '', 'Normal OT       : ', 'Adv Deduction'],
+        ['', '', 'Bonus OT         : ', 'Net Salary']
     ]
     
     # Column widths - 4 columns

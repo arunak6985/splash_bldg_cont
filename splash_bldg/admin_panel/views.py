@@ -302,13 +302,13 @@ def attendance(request):
                     duty_stop = ws.cell(row=row_num, column=5).value   # DUTY STOP
                     re_joining = ws.cell(row=row_num, column=6).value  # RE JOINING
                     
-                    # Skip empty rows
-                    if not ref_no or not name:
+                    # Skip completely empty rows (both ref_no and name are empty)
+                    if not ref_no and not name:
                         continue
                     
-                    # Clean data
-                    ref_no = str(ref_no).strip()
-                    name = str(name).strip()
+                    # Clean data - handle empty ref_no
+                    ref_no = str(ref_no).strip() if ref_no else ''
+                    name = str(name).strip() if name else ''
                     category = str(category).strip() if category else ''
                     
                     # Parse date fields
@@ -353,13 +353,15 @@ def attendance(request):
                         else:
                             attendance_data[str(day)] = ''
                     
-                    # Save to database
+                    # Save to database - use unique identifier for empty ref_no to avoid conflicts
+                    unique_ref = ref_no if ref_no else f"EMPTY_REF_{row_num}_{month}_{year}"
+                    
                     AttendanceRecord.objects.update_or_create(
-                        ref_no=ref_no,
+                        ref_no=unique_ref,
                         month=month,
                         year=year,
                         defaults={
-                            'name': name,
+                            'name': name or '',
                             'category': category,
                             'new_joining': new_joining_date,
                             'duty_stop': duty_stop_date,
@@ -406,6 +408,34 @@ def attendance(request):
         # Show all records if no filter
         records = AttendanceRecord.objects.all().order_by('-id')
     
+    # Calculate attendance statistics
+    total_present = 0
+    total_absent = 0
+    total_holiday = 0
+    total_medical = 0
+    total_normal_ot = 0
+    total_bonus_ot = 0
+    
+    for record in records:
+        if record.attendance_data:
+            for day, status in record.attendance_data.items():
+                if status == 'P':
+                    total_present += 1
+                    # Check if it's Sunday for OT calculation
+                    if month_filter and year_filter:
+                        try:
+                            day_date = date(int(year_filter), month_num, int(day))
+                            if day_date.weekday() != 6:  # Not Sunday
+                                total_normal_ot += 2  # 2 hours normal OT
+                        except:
+                            pass
+                elif status == 'A':
+                    total_absent += 1
+                elif status == 'H':
+                    total_holiday += 1
+                elif status == 'M':
+                    total_medical += 1
+    
     context = {
         'records': records,
         'months': ['January', 'February', 'March', 'April', 'May', 'June',
@@ -413,7 +443,13 @@ def attendance(request):
         'years': range(2020, 2030),
         'days_range': range(1, 32),
         'selected_month': month_filter,
-        'selected_year': year_filter
+        'selected_year': year_filter,
+        'total_present': total_present,
+        'total_absent': total_absent,
+        'total_holiday': total_holiday,
+        'total_medical': total_medical,
+        'total_normal_ot': total_normal_ot,
+        'total_bonus_ot': total_bonus_ot
     }
     return render(request, 'attendance.html', context)
 

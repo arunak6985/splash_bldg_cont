@@ -48,6 +48,43 @@
         <h4>Attendance Records</h4>
     </div>
     
+    <!-- Attendance Statistics -->
+    {% if selected_month and selected_year %}
+    <div class="attendance-stats">
+        <div class="stats-row">
+            <div class="stat-item">
+                <span class="stat-label">Present :</span>
+                <span class="stat-value">{{ total_present }}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Absent :</span>
+                <span class="stat-value">{{ total_absent }}</span>
+            </div>
+        </div>
+        <div class="stats-row">
+            <div class="stat-item">
+                <span class="stat-label">Holiday :</span>
+                <span class="stat-value">{{ total_holiday }}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Medical Leave :</span>
+                <span class="stat-value">{{ total_medical }}</span>
+            </div>
+        </div>
+        <div class="stats-row">
+            <div class="stat-item">
+                <span class="stat-label">Normal OT :</span>
+                <span class="stat-value">{{ total_normal_ot }}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Bonus OT :</span>
+                <span class="stat-value">{{ total_bonus_ot }}</span>
+            </div>
+        </div>
+        <div class="stats-divider"></div>
+    </div>
+    {% endif %}
+    
     <!-- Table Header Controls -->
     <div class="table-header-controls">
         <div class="left-controls">
@@ -1049,6 +1086,53 @@ function showFormatInfo() {
     margin: 0;
     color: #495057;
     font-weight: 600;
+}
+
+.attendance-stats {
+    padding: 20px 24px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.stats-row {
+    display: flex;
+    gap: 40px;
+    margin-bottom: 12px;
+}
+
+.stats-row:last-of-type {
+    margin-bottom: 0;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.stat-label {
+    font-weight: 600;
+    color: #495057;
+    font-size: 14px;
+}
+
+.stat-value {
+    font-weight: 700;
+    color: #007bff;
+    font-size: 16px;
+    min-width: 30px;
+    text-align: center;
+    background: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+}
+
+.stats-divider {
+    height: 2px;
+    background: #000;
+    margin-top: 15px;
+    border-radius: 1px;
 }
 
 .table-actions {

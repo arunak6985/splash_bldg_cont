@@ -157,7 +157,9 @@ def generate_single_page(p, record, width, height):
     ref_x = margin + name_width
     p.setLineWidth(0.3)
     p.line(ref_x, info_y, ref_x, info_y - info_height)
-    p.drawString(ref_x + 5, info_y - 17, f"REF.NO - {record.ref_no}")
+    # Display ref_no - show empty if it starts with EMPTY_REF_
+    display_ref = "" if record.ref_no.startswith("EMPTY_REF_") else record.ref_no
+    p.drawString(ref_x + 5, info_y - 17, f"REF.NO - {display_ref}")
     
     cat_x = ref_x + ref_width
     p.setLineWidth(0.7)
@@ -285,10 +287,18 @@ def generate_single_page(p, record, width, height):
                 else:
                     ot_value = '2'
             elif attendance_value == 'A':
-                p_value = 'ABSENT'
-                ot_value = ''
-                bonus_ot_value = ''
-                site_no_value = ''
+                if is_sunday:
+                    # Sunday absent - separate red dashes in each column
+                    p_value = '-'
+                    ot_value = '-'
+                    bonus_ot_value = '-'
+                    site_no_value = '-'
+                else:
+                    # Regular absent - merge columns with ABSENT text
+                    p_value = 'ABSENT'
+                    ot_value = ''
+                    bonus_ot_value = ''
+                    site_no_value = ''
                 absent_rows.append(day)
         else:
             if should_have_attendance:
@@ -299,15 +309,12 @@ def generate_single_page(p, record, width, height):
     
     # Calculate totals
     total_p_days = 0
-    total_ot_hours = 0
     total_absent_days = 0
     total_medical_days = 0
+    total_holiday_days = 0
     
     for day in range(1, days_in_month + 1):
         attendance_value = record.attendance_data.get(str(day), '').strip()
-        
-        date_obj = datetime(record.year, month_num, day)
-        is_sunday = date_obj.weekday() == 6
         
         should_have_attendance = True
         
@@ -323,14 +330,14 @@ def generate_single_page(p, record, width, height):
         if should_have_attendance:
             if attendance_value == 'P':
                 total_p_days += 1
-                if not is_sunday:
-                    total_ot_hours += 2
             elif attendance_value == 'A':
                 total_absent_days += 1
             elif attendance_value == 'M':
                 total_medical_days += 1
+            elif attendance_value == 'H':
+                total_holiday_days += 1
     
-    table_data.append(['Total', f'{total_p_days} (D)', f'{total_ot_hours} (H)', '', '', ''])
+    table_data.append(['Total', '', '', '', '', ''])
     
     # Create table
     table = Table(table_data, colWidths=col_widths, rowHeights=18)
@@ -352,7 +359,7 @@ def generate_single_page(p, record, width, height):
     no_work_rows = []
     sunday_absent_rows = []
     
-    # Mark absent days - merge columns with ABSENT text in red
+    # Mark absent days
     for day in absent_rows:
         if day <= days_in_month:
             row_index = day
@@ -372,14 +379,11 @@ def generate_single_page(p, record, width, height):
                     ('TEXTCOLOR', (1, row_index), (4, row_index), colors.red),
                     ('FONTNAME', (1, row_index), (4, row_index), 'Helvetica-Bold'),
                 ]))
-            elif is_sunday:
-                sunday_absent_rows.append(day)
-                # Sunday absent - merge P, OT, Bonus OT, Site No columns
+            elif is_sunday and record.attendance_data.get(str(day), '').strip() == 'A':
+                # Sunday absent - separate red dashes, no merge
                 table.setStyle(TableStyle([
-                    ('SPAN', (1, row_index), (4, row_index)),
                     ('TEXTCOLOR', (1, row_index), (4, row_index), colors.red),
                     ('FONTNAME', (1, row_index), (4, row_index), 'Helvetica-Bold'),
-                    ('ALIGN', (1, row_index), (4, row_index), 'CENTER'),
                 ]))
             else:
                 # Regular absent - merge P, OT, Bonus OT, Site No columns
@@ -426,7 +430,8 @@ def generate_single_page(p, record, width, height):
         date_obj = datetime(record.year, month_num, day)
         if date_obj.weekday() == 6:
             row_index = day
-            if day not in sunday_absent_rows:
+            attendance_val = record.attendance_data.get(str(day), '').strip()
+            if attendance_val != 'A':  # Not Sunday absent
                 # Regular Sunday - blue background for all columns
                 table.setStyle(TableStyle([
                     ('BACKGROUND', (0, row_index), (4, row_index), colors.Color(0.2, 0.4, 0.8)),
@@ -434,7 +439,7 @@ def generate_single_page(p, record, width, height):
                     ('FONTNAME', (0, row_index), (4, row_index), 'Helvetica-Bold'),
                 ]))
             else:
-                # Sunday absent - only date column blue, absent text remains red
+                # Sunday absent - only date column blue, no background for P,OT,Bonus,Site columns
                 table.setStyle(TableStyle([
                     ('BACKGROUND', (0, row_index), (0, row_index), colors.Color(0.2, 0.4, 0.8)),
                     ('TEXTCOLOR', (0, row_index), (0, row_index), colors.white),
@@ -452,10 +457,10 @@ def generate_single_page(p, record, width, height):
     bottom_data = [
         ['Engineer\'s Sign', 'Employee Sign', f'Present            : {total_p_days}', 'Basic'],
         ['', '', f'Absent             : {total_absent_days}', 'OT'],
-        ['', '', f'Normal OT       : {total_ot_hours}', 'Bonus'],
+        ['', '', f'Holiday            : {total_holiday_days}', 'Bonus'],
         ['', '', f'Medical Leave : {total_medical_days}', 'Gross Salary'],
-        ['', '', 'Bonus OT         : ', 'Adv Deduction'],
-        ['', '', '', 'Net Salary']
+        ['', '', 'Normal OT       : ', 'Adv Deduction'],
+        ['', '', 'Bonus OT         : ', 'Net Salary']
     ]
     
     # Column widths - 4 columns
