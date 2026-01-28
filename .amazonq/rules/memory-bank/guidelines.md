@@ -1,147 +1,143 @@
-# Development Guidelines and Standards
+# Development Guidelines
 
 ## Code Quality Standards
 
 ### Python/Django Code Formatting
-- **Function Documentation**: Use triple-quoted docstrings for function descriptions (found in 100% of analyzed functions)
-- **Import Organization**: Group imports by type - Django imports first, then local imports, followed by third-party libraries
-- **Line Length**: Keep lines readable, break complex expressions across multiple lines
-- **Variable Naming**: Use descriptive snake_case names (e.g., `attendance_data`, `selected_month`, `days_in_month`)
+- **Function Documentation**: All view functions include docstrings describing their purpose (e.g., `"""Admin-only view for managing job vacancies"""`)
+- **Import Organization**: Imports grouped logically - Django imports first, then local imports, with clear separation
+- **Line Length**: Code maintains reasonable line lengths with proper line breaks for readability
+- **Variable Naming**: Descriptive variable names using snake_case convention (`total_positions`, `filled_positions`, `attendance_data`)
 
-### JavaScript Code Standards
-- **Function Structure**: Use IIFE (Immediately Invoked Function Expression) pattern for main application logic
-- **Strict Mode**: Always use `"use strict";` at the beginning of JavaScript files
-- **Event Handling**: Use `addEventListener` for DOM event binding rather than inline handlers
-- **Variable Declarations**: Use `const` and `let` appropriately, avoid `var`
+### Structural Conventions
+- **Decorator Usage**: Consistent use of custom decorators for access control (`@custom_staff_required`, `@supervisor_required`)
+- **Error Handling**: Comprehensive try-catch blocks with meaningful error messages returned as JSON responses
+- **Response Patterns**: Standardized JSON response format with `success`, `message`, and data fields
+- **Method Validation**: Consistent HTTP method checking (`if request.method == 'POST'`)
 
-### HTML/Template Standards
-- **Template Inheritance**: Use Django template inheritance with base templates
-- **CSS Classes**: Use semantic class names with kebab-case (e.g., `mobile-nav-toggle`, `scroll-top`)
-- **Form Handling**: Implement proper CSRF protection for all forms
-- **Responsive Design**: Use Bootstrap classes and custom CSS for mobile-first design
-
-## Structural Conventions
-
-### Django Application Architecture
-- **App Separation**: Maintain clear separation between `admin_panel` (internal) and `site_application` (public) apps
-- **Model Organization**: Place related models in their respective app's `models.py` file
-- **View Decorators**: Use custom decorators like `@custom_staff_required` and `@supervisor_required` for access control
-- **URL Patterns**: Organize URLs by functionality with descriptive names
-
-### File Organization Patterns
-- **Static Files**: Organize by type - `css/`, `js/`, `img/`, `scss/`, `vendor/`
-- **Templates**: Use app-specific template directories with shared base templates
-- **Media Files**: Store user uploads in organized subdirectories (e.g., `resumes/`)
-- **Migrations**: Keep migration files organized by app with descriptive names
-
-### Database Design Patterns
-- **Model Properties**: Use `@property` decorators for calculated fields (e.g., `available_positions`)
-- **Meta Classes**: Include ordering and other metadata in model Meta classes
-- **Foreign Keys**: Use `on_delete=models.CASCADE` for dependent relationships
-- **Default Values**: Use `timezone.now` for timestamp fields, not `auto_now_add`
+### Textual Standards
+- **Model Field Names**: Clear, descriptive field names with help text where appropriate
+- **Template Naming**: Consistent HTML template naming following Django conventions
+- **URL Patterns**: Descriptive URL names matching view function purposes
+- **Comment Style**: Inline comments for complex logic, especially in date parsing and attendance calculations
 
 ## Semantic Patterns
 
-### Authentication and Authorization
-- **Custom Decorators**: Implement role-based access control with custom decorators
-- **Session Management**: Use Django sessions for supervisor authentication alongside Django auth
-- **Permission Checks**: Validate user permissions at both view and template levels
-- **Logout Handling**: Clear all session data on logout for security
+### Authentication and Authorization Patterns
+- **Custom Decorators**: Implemented custom authentication decorators instead of relying solely on Django's built-in decorators
+```python
+def custom_staff_required(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('admin_login')
+        if not request.user.is_staff:
+            return redirect('admin_login')
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+```
+
+- **Session-Based Authentication**: Dual authentication system supporting both Django users and custom supervisor sessions
+- **Access Control**: Granular permission checking with appropriate redirects
 
 ### Data Processing Patterns
-- **Excel File Handling**: Use `openpyxl` for Excel file processing with proper error handling
-- **Date Parsing**: Implement flexible date parsing functions to handle multiple formats
-- **JSON Responses**: Return consistent JSON structure with `success` and `message` fields
-- **Bulk Operations**: Support bulk actions for efficiency (delete, PDF generation)
+- **Excel File Processing**: Robust Excel file handling with multiple date format parsing
+- **Date Validation**: Comprehensive date parsing with fallback formats and error handling
+- **Bulk Operations**: Efficient bulk processing for attendance records and PDF generation
 
-### PDF Generation Standards
-- **ReportLab Usage**: Use ReportLab for PDF generation with proper styling
-- **Table Formatting**: Apply consistent table styles with borders, colors, and fonts
-- **Layout Management**: Use proper margins and positioning for professional appearance
-- **File Naming**: Use descriptive filenames with relevant data (ref_no, month, year)
-
-## Internal API Usage and Patterns
-
-### Django ORM Patterns
+### API Response Patterns
+- **Consistent JSON Structure**: All AJAX endpoints return standardized JSON with success/error states
 ```python
-# Use update_or_create for upsert operations
-AttendanceRecord.objects.update_or_create(
-    ref_no=ref_no, month=month, year=year,
-    defaults={'name': name, 'attendance_data': data}
-)
-
-# Use get_object_or_404 for single object retrieval
-record = get_object_or_404(AttendanceRecord, id=record_id)
-
-# Use filter with exists() for existence checks
-exists = Supervisor.objects.filter(username=username).exists()
+return JsonResponse({
+    'success': True,
+    'message': f'Job vacancy "{job.title}" created successfully!',
+    'data': additional_data
+})
 ```
 
-### AJAX Request Handling
-```javascript
-// Standard AJAX pattern with CSRF protection
-$.ajax({
-    url: url,
-    method: 'POST',
-    data: formData,
-    headers: {'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val()},
-    success: function(response) {
-        if (response.success) {
-            // Handle success
-        } else {
-            alert(response.message);
-        }
-    }
-});
-```
+- **Error Handling**: Graceful error handling with user-friendly messages
+- **Validation Responses**: Immediate feedback for form validation and data integrity
 
-### Form Processing Patterns
-```python
-# Standard form processing with validation
-if request.method == 'POST':
-    try:
-        # Process form data
-        # Validate input
-        # Save to database
-        return JsonResponse({'success': True, 'message': 'Success message'})
-    except Exception as e:
-        return JsonResponse({'success': False, 'message': str(e)})
-```
+### Database Interaction Patterns
+- **Model Properties**: Use of `@property` decorators for calculated fields (`available_positions`, `is_fully_filled`)
+- **QuerySet Optimization**: Efficient database queries with proper filtering and ordering
+- **Bulk Operations**: Use of `update_or_create` for data synchronization
+- **Foreign Key Relationships**: Proper model relationships with cascade deletion
+
+### File Management Patterns
+- **Media Handling**: Organized file upload structure with dedicated directories (`resumes/`)
+- **PDF Generation**: Complex PDF generation using ReportLab with detailed formatting
+- **Static File Organization**: Structured static file management with proper URL configuration
+
+### Frontend Integration Patterns
+- **AJAX Communication**: Heavy use of AJAX for dynamic user interactions
+- **Progressive Enhancement**: JavaScript functionality that enhances but doesn't break basic functionality
+- **Template Inheritance**: Proper Django template structure with base templates
+- **Static Asset Management**: Organized CSS/JS with third-party library integration
+
+### Configuration Management
+- **Settings Organization**: Clear separation of development and production settings
+- **Database Configuration**: Proper database setup with PostgreSQL for production
+- **Static/Media URLs**: Correct static and media file configuration
+- **Security Settings**: Appropriate security middleware and authentication settings
+
+### Business Logic Patterns
+- **Attendance Management**: Complex attendance tracking with multiple states (Present, Absent, Holiday, Medical)
+- **Vacancy Management**: Position tracking with available/filled position calculations
+- **Supervisor Workflow**: Separate supervisor interface with limited permissions
+- **Bulk Processing**: Efficient handling of multiple records for reporting and PDF generation
 
 ## Frequently Used Code Idioms
 
-### Error Handling
-- **Try-Catch Blocks**: Wrap risky operations in try-except blocks with meaningful error messages
-- **Validation**: Validate user input before processing (file types, data formats, permissions)
-- **Graceful Degradation**: Provide fallbacks when optional features fail (background images, logos)
+### Model Field Patterns
+```python
+# Standard model field setup with choices
+employment_type = models.CharField(max_length=50, choices=[
+    ('full_time', 'Full Time'),
+    ('part_time', 'Part Time'),
+    ('contract', 'Contract'),
+], default='full_time')
 
-### Data Transformation
-- **String Processing**: Use `.strip()` for cleaning user input, `.upper()` for standardization
-- **Date Handling**: Implement flexible date parsing with multiple format support
-- **JSON Processing**: Use `json.loads()` and `json.dumps()` for data serialization
+# Timestamp fields with timezone awareness
+created_at = models.DateTimeField(default=timezone.now)
+updated_at = models.DateTimeField(auto_now=True)
+```
 
-### UI/UX Patterns
-- **Loading States**: Show loading modals during AJAX operations
-- **Confirmation Dialogs**: Use `confirm()` for destructive operations
-- **Dynamic Content**: Update UI elements based on user actions without page refresh
-- **Responsive Tables**: Implement horizontal scrolling for data tables on mobile devices
+### View Function Structure
+```python
+@custom_staff_required
+def view_name(request):
+    """Descriptive docstring"""
+    if request.method == 'POST':
+        try:
+            # Process data
+            return JsonResponse({'success': True, 'message': 'Success message'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    
+    # GET request handling
+    context = {'data': queryset}
+    return render(request, 'template.html', context)
+```
 
-## Popular Annotations and Decorators
+### Date Processing Pattern
+```python
+def parse_date(date_value):
+    """Parse date from various formats"""
+    if isinstance(date_value, datetime):
+        return date_value.date()
+    elif isinstance(date_value, str):
+        for fmt in ['%Y-%m-%d', '%d/%m/%Y', '%m/%d/%Y']:
+            try:
+                return datetime.strptime(date_value.strip(), fmt).date()
+            except ValueError:
+                continue
+    return None
+```
 
-### Django Decorators
-- `@custom_staff_required`: Custom decorator for admin access control
-- `@supervisor_required`: Custom decorator for supervisor access control
-- `@login_required`: Django built-in for authenticated users
-- `@user_passes_test`: Django built-in for custom permission tests
-
-### Model Annotations
-- `@property`: For calculated model fields
-- `help_text`: For field documentation in admin interface
-- `default=timezone.now`: For timestamp fields
-- `blank=True`: For optional fields
-
-### JavaScript Patterns
-- Event delegation for dynamic content
-- Module pattern with IIFE for encapsulation
-- Progressive enhancement for accessibility
-- Smooth scrolling and animation effects
+### Popular Annotations and Decorators
+- `@custom_staff_required` - Custom authentication decorator
+- `@supervisor_required` - Role-based access control
+- `@property` - Model calculated fields
+- `@wraps(view_func)` - Decorator preservation
+- `default=timezone.now` - Timezone-aware timestamps
+- `on_delete=models.CASCADE` - Relationship management

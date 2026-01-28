@@ -381,8 +381,8 @@
 
       <!-- Section Title -->
       <div class="container section-title" data-aos="fade-up">
-        <h2>Portfolio</h2>
-        <p><span>Check Our&nbsp;</span> <span class="description-title">Portfolio</span></p>
+        <h2>Projects</h2>
+        <p><span>Complete&nbsp;</span> <span class="description-title">Projects</span></p>
       </div><!-- End Section Title -->
 
       <div class="container">
@@ -391,69 +391,173 @@
 
           <ul class="portfolio-filters isotope-filters" data-aos="fade-up" data-aos-delay="100">
             <li data-filter="*" class="filter-active">All</li>
-            <li data-filter=".filter-residential">Residential</li>
-            <li data-filter=".filter-commercial">Commercial</li>
-            <li data-filter=".filter-renovation">Renovation</li>
+            <li data-filter=".filter-residential">Appartments</li>
+            <li data-filter=".filter-commercial">Schools</li>
+            <li data-filter=".filter-renovation">Shop</li>
           </ul><!-- End Portfolio Filters -->
 
           <div class="row gy-4 isotope-container" data-aos="fade-up" data-aos-delay="200">
 
-            <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-residential">
-              <img src="{% static 'img/masonry-portfolio/masonry-portfolio-1.jpg' %}" class="img-fluid" alt="">
+            <!-- Default 6 items shown for "All" -->
+            <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-residential default-item">
+              <img src="{% static 'img/masonry-portfolio/appartment_1.jpg' %}" class="img-fluid" alt="">
               <div class="portfolio-info">
-                <h4>Residential 1</h4>
-                <p>Modern family home construction</p>
-                <a href="{% static 'img/masonry-portfolio/masonry-portfolio-1.jpg' %}" title="Residential 1" data-gallery="portfolio-gallery-residential" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                <h4>Apartment 1</h4>
+                <p>Modern family apartment</p>
+                <a href="{% static 'img/masonry-portfolio/appartment_1.jpg' %}" title="Apartment 1" data-gallery="portfolio-gallery-residential" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
                 <a href="#" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
               </div>
             </div><!-- End Portfolio Item -->
 
-            <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-commercial">
-              <img src="{% static 'img/masonry-portfolio/masonry-portfolio-2.jpg' %}" class="img-fluid" alt="">
+            <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-commercial default-item">
+              <img src="{% static 'img/masonry-portfolio/school_1.jpg' %}" class="img-fluid" alt="">
               <div class="portfolio-info">
-                <h4>Commercial 1</h4>
-                <p>Office building construction</p>
-                <a href="{% static 'img/masonry-portfolio/masonry-portfolio-2.jpg' %}" title="Commercial 1" data-gallery="portfolio-gallery-commercial" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                <h4>School 1</h4>
+                <p>Educational facility construction</p>
+                <a href="{% static 'img/masonry-portfolio/school_1.jpg' %}" title="School 1" data-gallery="portfolio-gallery-commercial" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
                 <a href="#" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
               </div>
             </div><!-- End Portfolio Item -->
 
-            <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-renovation">
-              <img src="{% static 'img/masonry-portfolio/masonry-portfolio-3.jpg' %}" class="img-fluid" alt="">
+            <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-renovation default-item">
+              <img src="{% static 'img/masonry-portfolio/shop_1.jpg' %}" class="img-fluid" alt="">
               <div class="portfolio-info">
-                <h4>Renovation 1</h4>
-                <p>Complete home renovation</p>
-                <a href="{% static 'img/masonry-portfolio/masonry-portfolio-3.jpg' %}" title="Renovation 1" data-gallery="portfolio-gallery-renovation" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                <h4>Shop 1</h4>
+                <p>Retail space renovation</p>
+                <a href="{% static 'img/masonry-portfolio/shop_1.jpg' %}" title="Shop 1" data-gallery="portfolio-gallery-renovation" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
                 <a href="#" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
               </div>
             </div><!-- End Portfolio Item -->
 
-            <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-residential">
-              <img src="{% static 'img/masonry-portfolio/masonry-portfolio-4.jpg' %}" class="img-fluid" alt="">
+            <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-renovation default-item">
+              <img src="{% static 'img/masonry-portfolio/shop_2.jpg' %}" class="img-fluid" alt="">
               <div class="portfolio-info">
-                <h4>Residential 2</h4>
-                <p>Luxury home construction</p>
-                <a href="{% static 'img/masonry-portfolio/masonry-portfolio-4.jpg' %}" title="Residential 2" data-gallery="portfolio-gallery-residential" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                <h4>Shop 2</h4>
+                <p>Commercial shop renovation</p>
+                <a href="{% static 'img/masonry-portfolio/shop_2.jpg' %}" title="Shop 2" data-gallery="portfolio-gallery-renovation" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
                 <a href="#" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
               </div>
             </div><!-- End Portfolio Item -->
 
-            <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-commercial">
-              <img src="{% static 'img/masonry-portfolio/masonry-portfolio-5.jpg' %}" class="img-fluid" alt="">
+            <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-residential default-item">
+              <img src="{% static 'img/masonry-portfolio/appartment_3.jpg' %}" class="img-fluid" alt="">
               <div class="portfolio-info">
-                <h4>Commercial 2</h4>
-                <p>Retail space construction</p>
-                <a href="{% static 'img/masonry-portfolio/masonry-portfolio-5.jpg' %}" title="Commercial 2" data-gallery="portfolio-gallery-commercial" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                <h4>Apartment 2</h4>
+                <p>Modern apartment construction</p>
+                <a href="{% static 'img/masonry-portfolio/appartment_3.jpg' %}" title="Apartment 2" data-gallery="portfolio-gallery-residential" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
                 <a href="#" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
               </div>
             </div><!-- End Portfolio Item -->
 
-            <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-renovation">
-              <img src="{% static 'img/masonry-portfolio/masonry-portfolio-6.jpg' %}" class="img-fluid" alt="">
+            <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-residential default-item">
+              <img src="{% static 'img/masonry-portfolio/appartment_2.jpg' %}" class="img-fluid" alt="">
               <div class="portfolio-info">
-                <h4>Renovation 2</h4>
-                <p>Kitchen remodeling project</p>
-                <a href="{% static 'img/masonry-portfolio/masonry-portfolio-6.jpg' %}" title="Renovation 2" data-gallery="portfolio-gallery-renovation" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                <h4>Apartment 3</h4>
+                <p>Luxury apartment project</p>
+                <a href="{% static 'img/masonry-portfolio/appartment_2.jpg' %}" title="Apartment 3" data-gallery="portfolio-gallery-residential" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                <a href="#" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
+              </div>
+            </div><!-- End Portfolio Item -->
+
+            <!-- Additional Apartment items (hidden by default, shown when Apartments filter is clicked) -->
+            <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-residential extra-residential" style="display: none;">
+              <img src="{% static 'img/masonry-portfolio/appartment_4.jpg' %}" class="img-fluid" alt="">
+              <div class="portfolio-info">
+                <h4>Apartment 4</h4>
+                <p>Premium apartment construction</p>
+                <a href="{% static 'img/masonry-portfolio/appartment_4.jpg' %}" title="Apartment 4" data-gallery="portfolio-gallery-residential" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                <a href="#" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
+              </div>
+            </div><!-- End Portfolio Item -->
+
+            <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-residential extra-residential" style="display: none;">
+              <img src="{% static 'img/masonry-portfolio/appartment_1.jpg' %}" class="img-fluid" alt="">
+              <div class="portfolio-info">
+                <h4>Apartment 5</h4>
+                <p>High-rise apartment building</p>
+                <a href="{% static 'img/masonry-portfolio/appartment_1.jpg' %}" title="Apartment 5" data-gallery="portfolio-gallery-residential" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                <a href="#" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
+              </div>
+            </div><!-- End Portfolio Item -->
+
+            <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-residential extra-residential" style="display: none;">
+              <img src="{% static 'img/masonry-portfolio/appartment_3.jpg' %}" class="img-fluid" alt="">
+              <div class="portfolio-info">
+                <h4>Apartment 6</h4>
+                <p>Residential complex construction</p>
+                <a href="{% static 'img/masonry-portfolio/appartment_3.jpg' %}" title="Apartment 6" data-gallery="portfolio-gallery-residential" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                <a href="#" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
+              </div>
+            </div><!-- End Portfolio Item -->
+
+            <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-residential extra-residential" style="display: none;">
+              <img src="{% static 'img/masonry-portfolio/appartment_2.jpg' %}" class="img-fluid" alt="">
+              <div class="portfolio-info">
+                <h4>Apartment 7</h4>
+                <p>Studio apartment development</p>
+                <a href="{% static 'img/masonry-portfolio/appartment_2.jpg' %}" title="Apartment 7" data-gallery="portfolio-gallery-residential" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                <a href="#" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
+              </div>
+            </div><!-- End Portfolio Item -->
+
+            <!-- Additional School items (hidden by default, shown when Schools filter is clicked) -->
+            <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-commercial extra-commercial" style="display: none;">
+              <img src="{% static 'img/masonry-portfolio/school_1.jpg' %}" class="img-fluid" alt="">
+              <div class="portfolio-info">
+                <h4>School 2</h4>
+                <p>Primary school construction</p>
+                <a href="{% static 'img/masonry-portfolio/school_1.jpg' %}" title="School 2" data-gallery="portfolio-gallery-commercial" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                <a href="#" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
+              </div>
+            </div><!-- End Portfolio Item -->
+
+            <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-commercial extra-commercial" style="display: none;">
+              <img src="{% static 'img/masonry-portfolio/school_1.jpg' %}" class="img-fluid" alt="">
+              <div class="portfolio-info">
+                <h4>School 3</h4>
+                <p>Secondary school building</p>
+                <a href="{% static 'img/masonry-portfolio/school_1.jpg' %}" title="School 3" data-gallery="portfolio-gallery-commercial" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                <a href="#" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
+              </div>
+            </div><!-- End Portfolio Item -->
+
+            <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-commercial extra-commercial" style="display: none;">
+              <img src="{% static 'img/masonry-portfolio/school_1.jpg' %}" class="img-fluid" alt="">
+              <div class="portfolio-info">
+                <h4>School 4</h4>
+                <p>University campus construction</p>
+                <a href="{% static 'img/masonry-portfolio/school_1.jpg' %}" title="School 4" data-gallery="portfolio-gallery-commercial" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                <a href="#" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
+              </div>
+            </div><!-- End Portfolio Item -->
+
+            <!-- Additional Shop items (hidden by default, shown when Shop filter is clicked) -->
+            <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-renovation extra-renovation" style="display: none;">
+              <img src="{% static 'img/masonry-portfolio/shop_1.jpg' %}" class="img-fluid" alt="">
+              <div class="portfolio-info">
+                <h4>Shop 3</h4>
+                <p>Boutique store renovation</p>
+                <a href="{% static 'img/masonry-portfolio/shop_1.jpg' %}" title="Shop 3" data-gallery="portfolio-gallery-renovation" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                <a href="#" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
+              </div>
+            </div><!-- End Portfolio Item -->
+
+            <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-renovation extra-renovation" style="display: none;">
+              <img src="{% static 'img/masonry-portfolio/shop_2.jpg' %}" class="img-fluid" alt="">
+              <div class="portfolio-info">
+                <h4>Shop 4</h4>
+                <p>Restaurant renovation</p>
+                <a href="{% static 'img/masonry-portfolio/shop_2.jpg' %}" title="Shop 4" data-gallery="portfolio-gallery-renovation" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                <a href="#" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
+              </div>
+            </div><!-- End Portfolio Item -->
+
+            <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-renovation extra-renovation" style="display: none;">
+              <img src="{% static 'img/masonry-portfolio/shop_1.jpg' %}" class="img-fluid" alt="">
+              <div class="portfolio-info">
+                <h4>Shop 5</h4>
+                <p>Supermarket renovation</p>
+                <a href="{% static 'img/masonry-portfolio/shop_1.jpg' %}" title="Shop 5" data-gallery="portfolio-gallery-renovation" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
                 <a href="#" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
               </div>
             </div><!-- End Portfolio Item -->
@@ -465,14 +569,87 @@
       </div>
 
     </section><!-- /Portfolio Section -->
+               
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const filters = document.querySelectorAll('.isotope-filters li');
+        const allItems = document.querySelectorAll('.portfolio-item');
+        const defaultItems = document.querySelectorAll('.default-item');
+        const extraResidential = document.querySelectorAll('.extra-residential');
+        const extraCommercial = document.querySelectorAll('.extra-commercial');
+        const extraRenovation = document.querySelectorAll('.extra-renovation');
+        
+        // Function to hide all items
+        function hideAllItems() {
+            allItems.forEach(item => {
+                item.style.display = 'none';
+            });
+        }
+        
+        // Function to show default items (for "All" filter)
+        function showDefaultItems() {
+            defaultItems.forEach(item => {
+                item.style.display = 'block';
+            });
+        }
+        
+        // Function to show items by category
+        function showCategoryItems(category) {
+            // Hide all items first
+            hideAllItems();
+            
+            // Show items based on category
+            if (category === '.filter-residential') {
+                // Show all residential items (default + extra)
+                document.querySelectorAll('.filter-residential').forEach(item => {
+                    item.style.display = 'block';
+                });
+            } else if (category === '.filter-commercial') {
+                // Show all commercial items (default + extra)
+                document.querySelectorAll('.filter-commercial').forEach(item => {
+                    item.style.display = 'block';
+                });
+            } else if (category === '.filter-renovation') {
+                // Show all renovation items (default + extra)
+                document.querySelectorAll('.filter-renovation').forEach(item => {
+                    item.style.display = 'block';
+                });
+            }
+        }
+        
+        filters.forEach(filter => {
+            filter.addEventListener('click', function() {
+                // Remove active class from all filters
+                filters.forEach(f => f.classList.remove('filter-active'));
+                // Add active class to clicked filter
+                this.classList.add('filter-active');
+                
+                const filterValue = this.getAttribute('data-filter');
+                
+                if (filterValue === '*') {
+                    // Show only default 6 items for "All"
+                    hideAllItems();
+                    showDefaultItems();
+                } else {
+                    // Show category-specific items
+                    showCategoryItems(filterValue);
+                }
+            });
+        });
+        
+        // Initialize with default items visible
+        hideAllItems();
+        showDefaultItems();
+    });
+    </script>
 
     <!-- Team Section -->
     <section id="team" class="team section light-background">
 
       <!-- Section Title -->
       <div class="container section-title" data-aos="fade-up">
-        <h2>Team</h2>
-        <p><span>Our Hardworking</span> <span class="description-title">Team</span></p>
+        <h2></h2>
+        <p><span>Certificate</span> <span class="description-title"></span></p>
       </div><!-- End Section Title -->
 
       <div class="container">
@@ -483,12 +660,7 @@
             <div class="team-member">
               <div class="member-img">
                 <img src="{% static 'img/team/team-1.jpg' %}" class="img-fluid" alt="">
-                <div class="social">
-                  <a href=""><i class="bi bi-twitter-x"></i></a>
-                  <a href=""><i class="bi bi-facebook"></i></a>
-                  <a href=""><i class="bi bi-instagram"></i></a>
-                  <a href=""><i class="bi bi-linkedin"></i></a>
-                </div>
+               
               </div>
               <div class="member-info">
                 <h4>John Smith</h4>
@@ -501,12 +673,7 @@
             <div class="team-member">
               <div class="member-img">
                 <img src="{% static 'img/team/team-2.jpg' %}" class="img-fluid" alt="">
-                <div class="social">
-                  <a href=""><i class="bi bi-twitter-x"></i></a>
-                  <a href=""><i class="bi bi-facebook"></i></a>
-                  <a href=""><i class="bi bi-instagram"></i></a>
-                  <a href=""><i class="bi bi-linkedin"></i></a>
-                </div>
+              
               </div>
               <div class="member-info">
                 <h4>Sarah Johnson</h4>
@@ -519,12 +686,7 @@
             <div class="team-member">
               <div class="member-img">
                 <img src="{% static 'img/team/team-3.jpg' %}" class="img-fluid" alt="">
-                <div class="social">
-                  <a href=""><i class="bi bi-twitter-x"></i></a>
-                  <a href=""><i class="bi bi-facebook"></i></a>
-                  <a href=""><i class="bi bi-instagram"></i></a>
-                  <a href=""><i class="bi bi-linkedin"></i></a>
-                </div>
+           
               </div>
               <div class="member-info">
                 <h4>Mike Anderson</h4>
@@ -537,13 +699,7 @@
             <div class="team-member">
               <div class="member-img">
                 <img src="{% static 'img/team/team-4.jpg' %}" class="img-fluid" alt="">
-                <div class="social">
-                  <a href=""><i class="bi bi-twitter-x"></i></a>
-                  <a href=""><i class="bi bi-facebook"></i></a>
-                  <a href=""><i class="bi bi-instagram"></i></a>
-                  <a href=""><i class="bi bi-linkedin"></i></a>
-                </div>
-              </div>
+            
               <div class="member-info">
                 <h4>Lisa Wilson</h4>
                 <span>Safety Coordinator</span>

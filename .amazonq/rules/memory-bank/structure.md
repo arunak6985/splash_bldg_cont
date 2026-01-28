@@ -1,112 +1,71 @@
-# Project Structure and Architecture
+# Project Structure
 
-## Directory Structure
+## Directory Organization
 
+### Root Structure
 ```
 splash_bldg_cont/
-├── env/                          # Python virtual environment
-├── splash_bldg/                  # Main Django project
-│   ├── admin_panel/              # Admin functionality app
-│   │   ├── migrations/           # Database migrations
-│   │   ├── templates/            # Admin HTML templates
-│   │   ├── templatetags/         # Custom template tags
-│   │   ├── models.py             # Admin data models
-│   │   ├── views.py              # Admin view controllers
-│   │   ├── pdf_views.py          # PDF generation views
-│   │   ├── bulk_pdf_views.py     # Bulk PDF operations
-│   │   └── urls.py               # Admin URL routing
-│   ├── site_application/         # Public site app
-│   │   ├── migrations/           # Database migrations
-│   │   ├── templates/            # Public HTML templates
-│   │   ├── models.py             # Application data models
-│   │   ├── views.py              # Public view controllers
-│   │   └── urls.py               # Public URL routing
-│   ├── splash_bldg/              # Project configuration
-│   │   ├── static/               # Static assets
-│   │   │   ├── css/              # Stylesheets
-│   │   │   ├── js/               # JavaScript files
-│   │   │   ├── img/              # Images
-│   │   │   ├── scss/             # SASS source files
-│   │   │   └── vendor/           # Third-party libraries
-│   │   ├── settings.py           # Django configuration
-│   │   ├── urls.py               # Main URL routing
-│   │   └── wsgi.py               # WSGI application
-│   ├── media/                    # User uploaded files
-│   │   └── resumes/              # Resume file storage
-│   ├── db.sqlite3                # SQLite database (dev)
-│   └── manage.py                 # Django management script
-└── .amazonq/                     # AI assistant configuration
-    └── rules/                    # Project rules and documentation
+├── env/                    # Python virtual environment
+├── splash_bldg/           # Main Django project directory
+└── .amazonq/              # Amazon Q configuration and rules
+```
+
+### Main Application Structure
+```
+splash_bldg/
+├── admin_panel/           # Administrative functionality app
+├── site_application/      # Public job application app
+├── splash_bldg/          # Django project configuration
+├── media/                # User uploaded files (resumes)
+├── db.sqlite3           # Database file
+└── manage.py            # Django management script
 ```
 
 ## Core Components and Relationships
 
-### Django Applications Architecture
+### Django Applications
 
-#### admin_panel App
-- **Purpose**: Administrative interface for HR and management operations
-- **Key Models**: AttendanceRecord, EmployeeAttendance, Supervisor
-- **Responsibilities**: 
-  - User authentication and session management
-  - Attendance data processing and visualization
-  - PDF report generation (individual and bulk)
-  - Job vacancy management
-  - Excel file upload and processing
+#### admin_panel/
+- **Purpose**: Administrative interface for managing vacancies and applications
+- **Key Components**:
+  - `views_yesterday.py` - Historical data views
+  - `bulk_pdf_views.py` - Bulk document processing
+  - `models.py` - Administrative data models
+  - `templates/` - Admin interface templates
+  - `management/` - Custom Django commands
 
-#### site_application App  
-- **Purpose**: Public-facing website for job seekers
-- **Key Models**: JobVacancy, JobApplication, Contact, JobTitle, Location
-- **Responsibilities**:
-  - Job listing display and management
-  - Application form processing
-  - Resume file handling
-  - Contact form submissions
+#### site_application/
+- **Purpose**: Public-facing job application system
+- **Key Components**:
+  - `models.py` - Application and job data models
+  - `views.py` - Public interface logic
+  - `templates/` - Public website templates
+  - `migrations/` - Database schema changes
 
-#### splash_bldg Configuration
-- **Purpose**: Project-wide settings and URL routing
-- **Components**:
-  - Database configuration (PostgreSQL)
-  - Static file management
-  - Media file handling
-  - Security settings
-
-### Data Flow Architecture
-
-```
-User Request → URLs → Views → Models → Database
-                ↓
-            Templates ← Context Data
-                ↓
-            HTTP Response
-```
-
-### File Processing Pipeline
-
-```
-Excel Upload → Validation → Data Parsing → Model Creation → Database Storage
-                                    ↓
-PDF Generation ← Template Rendering ← Data Retrieval
-```
+#### splash_bldg/ (Project Configuration)
+- **Purpose**: Django project settings and configuration
+- **Key Components**:
+  - `settings.py` - Application configuration
+  - `urls.py` - URL routing
+  - `static/` - CSS, JavaScript, and image assets
+  - `wsgi.py` - Web server gateway interface
 
 ## Architectural Patterns
 
-### Model-View-Template (MVT)
-- **Models**: Define data structure and business logic
-- **Views**: Handle request processing and response generation  
-- **Templates**: Render HTML with dynamic content
+### Model-View-Template (MVT) Architecture
+- **Models**: Database layer handling job applications, vacancies, and user data
+- **Views**: Business logic processing requests and responses
+- **Templates**: HTML presentation layer with dynamic content
 
-### Separation of Concerns
-- **admin_panel**: Internal operations and management
-- **site_application**: External user interactions
-- **static**: Client-side assets and styling
-- **media**: User-generated content storage
+### Application Separation
+- Clear separation between public-facing functionality (`site_application`) and administrative features (`admin_panel`)
+- Shared configuration and static assets in the main project directory
 
-### Authentication Flow
-- Custom login system with session management
-- Role-based access control for admin functions
-- Secure file upload with validation
+### Media Management
+- Centralized media handling for file uploads (resumes, documents)
+- Static file organization for CSS, JavaScript, and images
 
-### Database Design
-- PostgreSQL for production data storage
-- Django ORM for database abstraction
-- Migration system for schema management
+### Database Architecture
+- PostgreSQL database for production data storage
+- Django ORM for database abstraction and migrations
+- Separate models for different functional areas

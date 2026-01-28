@@ -144,16 +144,16 @@ def generate_single_page(p, record, width, height):
     p.setLineWidth(0.5)
     p.rect(margin, info_y - info_height, content_width, info_height, stroke=1, fill=0)
     
-    # Calculate section widths
-    name_width = content_width * 0.4
-    ref_width = content_width * 0.3
+    # Calculate section widths - reduce ref, increase cat
+    name_width = content_width * 0.45
+    ref_width = content_width * 0.2
     
     # Employee info
     p.setFont("Helvetica-Bold", 10)
     p.setFillColor(colors.black)
     p.drawString(margin + 5, info_y - 17, f"NAME: {record.name}")
     
-    # Vertical lines
+    # Vertical lines - adjusted positions
     ref_x = margin + name_width
     p.setLineWidth(0.3)
     p.line(ref_x, info_y, ref_x, info_y - info_height)
@@ -403,14 +403,15 @@ def generate_single_page(p, record, width, height):
                 ('FONTNAME', (2, row_index), (2, row_index), 'Helvetica-Bold'),
             ]))
     
-    # Merge and style Holiday rows - no background, black text
+    # Merge and style Holiday rows - yellow background for entire row
     for day in holiday_rows:
         if day <= days_in_month:
             row_index = day
             table.setStyle(TableStyle([
                 ('SPAN', (1, row_index), (4, row_index)),
-                ('TEXTCOLOR', (1, row_index), (4, row_index), colors.black),
-                ('FONTNAME', (1, row_index), (4, row_index), 'Helvetica-Bold'),
+                ('BACKGROUND', (0, row_index), (4, row_index), colors.yellow),
+                ('TEXTCOLOR', (0, row_index), (4, row_index), colors.black),
+                ('FONTNAME', (0, row_index), (4, row_index), 'Helvetica-Bold'),
                 ('ALIGN', (1, row_index), (4, row_index), 'CENTER'),
             ]))
     
@@ -425,23 +426,23 @@ def generate_single_page(p, record, width, height):
                 ('ALIGN', (1, row_index), (4, row_index), 'CENTER'),
             ]))
     
-    # Mark Sundays in medium dark blue - date column only, but not for Sunday absent days
+    # Mark Sundays in blue (date column only), but not for Sunday absent days
     for day in range(1, days_in_month + 1):
         date_obj = datetime(record.year, month_num, day)
         if date_obj.weekday() == 6:
             row_index = day
             attendance_val = record.attendance_data.get(str(day), '').strip()
             if attendance_val != 'A':  # Not Sunday absent
-                # Regular Sunday - blue background for all columns
+                # Regular Sunday - blue background for date column only
                 table.setStyle(TableStyle([
-                    ('BACKGROUND', (0, row_index), (4, row_index), colors.Color(0.2, 0.4, 0.8)),
-                    ('TEXTCOLOR', (0, row_index), (4, row_index), colors.white),
-                    ('FONTNAME', (0, row_index), (4, row_index), 'Helvetica-Bold'),
+                    ('BACKGROUND', (0, row_index), (0, row_index), colors.blue),
+                    ('TEXTCOLOR', (0, row_index), (0, row_index), colors.white),
+                    ('FONTNAME', (0, row_index), (0, row_index), 'Helvetica-Bold'),
                 ]))
             else:
                 # Sunday absent - only date column blue, no background for P,OT,Bonus,Site columns
                 table.setStyle(TableStyle([
-                    ('BACKGROUND', (0, row_index), (0, row_index), colors.Color(0.2, 0.4, 0.8)),
+                    ('BACKGROUND', (0, row_index), (0, row_index), colors.blue),
                     ('TEXTCOLOR', (0, row_index), (0, row_index), colors.white),
                     ('FONTNAME', (0, row_index), (0, row_index), 'Helvetica-Bold'),
                 ]))

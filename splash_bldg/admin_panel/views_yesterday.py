@@ -424,15 +424,15 @@ def attendance(request):
         # Employee info boxes matching reference design
         p.setFont("Helvetica-Bold", 10)
         
-        # Draw boxes for employee info
-        p.rect(50, height-130, 250, 20)
-        p.rect(300, height-130, 120, 20)
-        p.rect(420, height-130, 80, 20)
+        # Draw boxes for employee info - reduce ref, increase cat
+        p.rect(50, height-130, 300, 20)  # Name box - wider
+        p.rect(350, height-130, 80, 20)   # Ref box - smaller
+        p.rect(430, height-130, 100, 20)  # Cat box - bigger
         
-        # Add labels and data
+        # Add labels and data - reduce ref, increase cat positions
         p.drawString(55, height-125, f"NAME: {name}")
-        p.drawString(305, height-125, f"REF.NO - {ref_no}")
-        p.drawString(425, height-125, f"CAT: {cat}")
+        p.drawString(355, height-125, f"REF.NO - {ref_no}")
+        p.drawString(435, height-125, f"CAT: {cat}")
         
         # Main attendance table with integrated bottom section
         table_data = [['Date', 'P', 'OT', 'Bonus OT', 'Site No.', 'Remarks if any with Sign']]
@@ -486,7 +486,7 @@ def attendance(request):
             ('SPAN', (1, days_in_month+2), (1, days_in_month+7)),
         ]))
         
-        # Mark Sundays and Absent days in red
+        # Mark Sundays in blue (date column only) and Absent days in red
         for i in range(1, days_in_month + 1):
             row_index = i
             day_str = table_data[row_index][0]
@@ -494,7 +494,7 @@ def attendance(request):
             
             if '(SUN)' in str(day_str):
                 table.setStyle(TableStyle([
-                    ('BACKGROUND', (0, row_index), (0, row_index), colors.red),
+                    ('BACKGROUND', (0, row_index), (0, row_index), colors.blue),
                     ('TEXTCOLOR', (0, row_index), (0, row_index), colors.white),
                 ]))
             # Mark entire row red if attendance is 'A' (Absent)
@@ -551,15 +551,15 @@ def attendance(request):
                     # Employee info boxes matching reference design
                     p.setFont("Helvetica-Bold", 10)
                     
-                    # Draw boxes for employee info
-                    p.rect(50, height-130, 250, 20)
-                    p.rect(300, height-130, 120, 20)
-                    p.rect(420, height-130, 80, 20)
+                    # Draw boxes for employee info - reduce ref, increase cat
+                    p.rect(50, height-130, 300, 20)  # Name box - wider
+                    p.rect(350, height-130, 80, 20)   # Ref box - smaller
+                    p.rect(430, height-130, 100, 20)  # Cat box - bigger
                     
-                    # Add labels and data
+                    # Add labels and data - reduce ref, increase cat positions
                     p.drawString(55, height-125, f"NAME: {emp.get('name', '')}")
-                    p.drawString(305, height-125, f"REF.NO - {emp.get('ref_no', '')}")
-                    p.drawString(425, height-125, f"CAT: {emp.get('cat', '')}")
+                    p.drawString(355, height-125, f"REF.NO - {emp.get('ref_no', '')}")
+                    p.drawString(435, height-125, f"CAT: {emp.get('cat', '')}")
                     
                     # Table data
                     table_data = [['Date', 'P', 'OT', 'Bonus OT', 'Site No.', 'Remarks if any with Sign']]
@@ -611,14 +611,14 @@ def attendance(request):
                         ('GRID', (0, 0), (-1, -1), 1, colors.black),
                     ]))
                     
-                    # Mark Sundays, Absent, Holiday, and Medical days
+                    # Mark Sundays in blue (date column only), Absent, Holiday, and Medical days
                     for i in range(1, days_in_month + 1):
                         row_index = i
                         day_str = table_data[row_index][0]
                         
                         if '(SUN)' in str(day_str):
                             table.setStyle(TableStyle([
-                                ('BACKGROUND', (0, row_index), (0, row_index), colors.red),
+                                ('BACKGROUND', (0, row_index), (0, row_index), colors.blue),
                                 ('TEXTCOLOR', (0, row_index), (0, row_index), colors.white),
                             ]))
                         
@@ -629,12 +629,13 @@ def attendance(request):
                                 ('FONTNAME', (1, row_index), (4, row_index), 'Helvetica-Bold'),
                             ]))
                         
-                        # Merge and style Holiday rows - yellow text, no background
+                        # Merge and style Holiday rows - yellow background for entire row
                         if i in holiday_rows:
                             table.setStyle(TableStyle([
                                 ('SPAN', (1, row_index), (4, row_index)),
-                                ('TEXTCOLOR', (1, row_index), (4, row_index), colors.yellow),
-                                ('FONTNAME', (1, row_index), (4, row_index), 'Helvetica-Bold'),
+                                ('BACKGROUND', (0, row_index), (4, row_index), colors.yellow),
+                                ('TEXTCOLOR', (0, row_index), (4, row_index), colors.black),
+                                ('FONTNAME', (0, row_index), (4, row_index), 'Helvetica-Bold'),
                                 ('ALIGN', (1, row_index), (4, row_index), 'CENTER'),
                             ]))
                         
