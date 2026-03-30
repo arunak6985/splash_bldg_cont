@@ -1,38 +1,39 @@
 # Product Overview
 
 ## Project Purpose
-Splash Building Contractors is a Django-based web application designed to manage construction company operations, including job applications, vacancy management, and administrative functions.
+Splash Building Contractors website - A Django-based web application for managing building contractor operations, including job vacancy management, resume submissions, and administrative operations.
 
 ## Key Features and Capabilities
 
-### Job Application Management
-- Online job application system for construction positions
-- Resume upload and storage functionality
-- Application tracking and management
+### Public-Facing Features
+- Job vacancy browsing and application submission
+- Resume upload and management system
+- Public site interface for potential employees and clients
 
-### Administrative Panel
-- Vacancy management system for posting and managing job openings
-- Bulk PDF processing capabilities for handling multiple documents
-- Administrative dashboard for managing applications and company data
+### Administrative Features
+- Admin panel for vacancy management
+- Resume review and processing system
+- Cheque management and processing
+- PDF generation and bulk PDF operations
+- Custom template tags for enhanced admin functionality
+- Secure admin authentication with custom login flow
 
-### User Interface
-- Public-facing website for job seekers
-- Responsive design with modern web technologies
-- Static file management for assets and media
+### Document Management
+- Resume file uploads and storage
+- Cheque image processing and storage
+- PDF generation for administrative documents
+- Bulk PDF operations for batch processing
 
-## Target Users and Use Cases
+## Target Users
 
 ### Primary Users
-- **Job Seekers**: Construction workers and professionals looking for employment opportunities
-- **HR Administrators**: Company staff managing recruitment and hiring processes
-- **Management**: Supervisors overseeing company operations and staffing
+- **Job Seekers**: Individuals looking for employment opportunities with the building contractor
+- **HR/Admin Staff**: Personnel managing job postings, reviewing applications, and processing administrative documents
+- **Management**: Oversight of operations, vacancy management, and financial document processing
 
-### Key Use Cases
-- Posting new job vacancies and requirements
-- Processing incoming job applications
-- Managing candidate information and resumes
-- Tracking application status and hiring pipeline
-- Generating reports and managing bulk document processing
-
-## Value Proposition
-Streamlines the recruitment process for construction companies by providing a centralized platform for job posting, application management, and candidate tracking, reducing administrative overhead and improving hiring efficiency.
+### Use Cases
+- Post and manage job vacancies
+- Accept and review job applications with resume uploads
+- Process and manage cheque payments
+- Generate administrative reports and documents
+- Maintain secure access to administrative functions

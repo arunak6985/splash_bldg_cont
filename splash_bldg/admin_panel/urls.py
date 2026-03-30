@@ -2,6 +2,8 @@ from django.urls import path
 from . import views
 from .pdf_views import generate_attendance_pdf
 from .bulk_pdf_views import generate_bulk_pdf
+from .cheque_views import cheque_upload, process_cheque_upload
+from .translate_views import pdf_translate, process_pdf_translate
 
 urlpatterns = [
     path('admin-login/', views.admin_login, name='admin_login'),
@@ -30,4 +32,12 @@ urlpatterns = [
     path('attendance/delete-all/', views.delete_all_attendance, name='delete_all_attendance'),
     path('attendance/pdf/<int:record_id>/', generate_attendance_pdf, name='generate_attendance_pdf'),
     path('attendance/bulk-pdf/', generate_bulk_pdf, name='generate_bulk_pdf'),
+    
+    # Cheque Upload URLs
+    path('cheque-upload/', cheque_upload, name='cheque_upload'),
+    path('process-cheque-upload/', process_cheque_upload, name='process_cheque_upload'),
+    
+    # PDF Translation URLs
+    path('pdf-translate/', pdf_translate, name='pdf_translate'),
+    path('process-pdf-translate/', process_pdf_translate, name='process_pdf_translate'),
 ]

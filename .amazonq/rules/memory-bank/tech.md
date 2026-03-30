@@ -1,53 +1,64 @@
 # Technology Stack
 
-## Programming Languages and Frameworks
+## Programming Languages
+- **Python**: Primary backend language (Python 3.11 based on virtual environment)
+- **HTML/CSS/JavaScript**: Frontend technologies for templates and static files
 
-### Backend
-- **Python**: Primary programming language
-- **Django 5.2.9**: Web framework for rapid development
-- **Django ORM**: Database abstraction layer
+## Core Framework
+- **Django 5.2.9**: Web framework for backend application
+  - Django Admin: Built-in admin interface
+  - Django ORM: Database abstraction layer
+  - Django Templates: Template engine
+  - Django Forms: Form handling and validation
 
-### Frontend
-- **HTML/CSS**: Template markup and styling
-- **JavaScript**: Client-side interactivity
-- **Django Templates**: Server-side template rendering
-
-### Database
-- **PostgreSQL**: Production database system
+## Database
+- **PostgreSQL**: Production database
+  - Database: postgres
   - Host: localhost
   - Port: 5432
-  - Database: postgres
-- **SQLite**: Development/testing database (db.sqlite3)
+- **SQLite3**: Development/fallback database (db.sqlite3)
+
+## Key Dependencies
+Based on virtual environment and project structure:
+- **django**: Web framework (5.2.9)
+- **psycopg2**: PostgreSQL adapter for Python
+- **Pillow**: Image processing library (for cheque/resume handling)
+- **pytesseract**: OCR capabilities (executable present in env)
+- **numpy**: Numerical computing support
+- **sqlparse**: SQL formatting utility
 
 ## Development Environment
+- **Virtual Environment**: Python venv located in `env/` directory
+- **Package Manager**: pip (pip 3.11)
+- **Operating System**: Windows (based on .bat and .exe files in Scripts/)
 
-### Virtual Environment
-- **Location**: `env/` directory
-- **Python Version**: 3.11 (based on pip3.11.exe presence)
-- **Activation**: `env/Scripts/activate.bat` (Windows)
+## Project Configuration
+- **Settings Module**: splash_bldg.settings
+- **WSGI Application**: splash_bldg.wsgi.application
+- **ASGI Application**: splash_bldg.asgi (async support)
+- **Static Files**: Served from `/static/` URL
+- **Media Files**: Served from `/media/` URL, stored in `media/` directory
 
-### Key Dependencies
-- **Django**: Web framework
-- **NumPy**: Data processing capabilities
-- **SQL Formatter**: Database query formatting
-- **Normalizer**: Text processing utilities
+## Development Commands
 
-## Build System and Commands
-
-### Django Management
-- **Entry Point**: `manage.py`
-- **Settings Module**: `splash_bldg.settings`
-
-### Common Development Commands
+### Environment Activation
 ```bash
-# Activate virtual environment
+# Windows
 env\Scripts\activate.bat
 
+# PowerShell
+env\Scripts\Activate.ps1
+```
+
+### Django Management
+```bash
 # Run development server
 python manage.py runserver
 
-# Database migrations
+# Create migrations
 python manage.py makemigrations
+
+# Apply migrations
 python manage.py migrate
 
 # Create superuser
@@ -57,31 +68,25 @@ python manage.py createsuperuser
 python manage.py collectstatic
 ```
 
-## Configuration Details
+### Database Management
+```bash
+# Access Django shell
+python manage.py shell
 
-### Static Files
-- **URL**: `/static/`
-- **Directory**: `splash_bldg/static/`
-- **Served by**: Django development server
+# Database shell
+python manage.py dbshell
 
-### Media Files
-- **URL**: `/media/`
-- **Root**: `media/` directory
-- **Purpose**: User uploads (resumes, documents)
+# SQL formatting
+sqlformat [options]
+```
 
-### Security Settings
-- **Debug Mode**: Enabled (development)
-- **Secret Key**: Configured (should be environment variable in production)
-- **CSRF Protection**: Enabled
-- **Authentication**: Django built-in system
+## Security Configuration
+- **SECRET_KEY**: Django secret key (should be environment variable in production)
+- **DEBUG**: Currently True (must be False in production)
+- **ALLOWED_HOSTS**: Currently empty (must be configured for production)
+- **Custom Login**: LOGIN_URL = '/admin-login/', LOGIN_REDIRECT_URL = '/admin-vacancy-management/'
 
-### URL Configuration
-- **Root URLconf**: `splash_bldg.urls`
-- **Custom Login**: `/admin-login/`
-- **Login Redirect**: `/admin-vacancy-management/`
-
-## Deployment Considerations
-- **WSGI Application**: `splash_bldg.wsgi.application`
-- **Template Backend**: Django templates with app directories
-- **Internationalization**: English (en-us), UTC timezone
-- **Password Validation**: Django standard validators enabled
+## File Upload Configuration
+- **MEDIA_ROOT**: BASE_DIR / 'media'
+- **MEDIA_URL**: '/media/'
+- Upload directories: cheques/, resumes/

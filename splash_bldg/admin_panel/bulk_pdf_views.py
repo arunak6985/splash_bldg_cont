@@ -283,6 +283,8 @@ def generate_single_page(p, record, width, height):
                 p_value = '8'
                 if is_sunday:
                     ot_value = '-'
+                    bonus_ot_value = '-'
+                    site_no_value = '-'
                     sunday_ot_rows.append(day)  # Track for red color
                 else:
                     ot_value = '2'
@@ -316,6 +318,9 @@ def generate_single_page(p, record, width, height):
     for day in range(1, days_in_month + 1):
         attendance_value = record.attendance_data.get(str(day), '').strip()
         
+        date_obj = datetime(record.year, month_num, day)
+        is_sunday = date_obj.weekday() == 6
+        
         should_have_attendance = True
         
         if joining_day and day < joining_day:
@@ -331,7 +336,9 @@ def generate_single_page(p, record, width, height):
             if attendance_value == 'P':
                 total_p_days += 1
             elif attendance_value == 'A':
-                total_absent_days += 1
+                # Exclude Sunday absents from total absent calculation
+                if not is_sunday:
+                    total_absent_days += 1
             elif attendance_value == 'M':
                 total_medical_days += 1
             elif attendance_value == 'H':
@@ -394,13 +401,13 @@ def generate_single_page(p, record, width, height):
                     ('ALIGN', (1, row_index), (4, row_index), 'CENTER'),
                 ]))
     
-    # Mark Sunday OT symbols as red in OT column only
+    # Mark Sunday OT, Bonus OT, and Site No symbols as red
     for day in sunday_ot_rows:
         if day <= days_in_month:
             row_index = day
             table.setStyle(TableStyle([
-                ('TEXTCOLOR', (2, row_index), (2, row_index), colors.red),  # OT column only
-                ('FONTNAME', (2, row_index), (2, row_index), 'Helvetica-Bold'),
+                ('TEXTCOLOR', (2, row_index), (4, row_index), colors.red),  # OT, Bonus OT, Site No columns
+                ('FONTNAME', (2, row_index), (4, row_index), 'Helvetica-Bold'),
             ]))
     
     # Merge and style Holiday rows - yellow background for entire row
@@ -426,33 +433,38 @@ def generate_single_page(p, record, width, height):
                 ('ALIGN', (1, row_index), (4, row_index), 'CENTER'),
             ]))
     
-    # Mark Sundays in blue (date column only), but not for Sunday absent days
+    # Mark Sundays with red (S) suffix - no blue background
     for day in range(1, days_in_month + 1):
         date_obj = datetime(record.year, month_num, day)
         if date_obj.weekday() == 6:
             row_index = day
-            attendance_val = record.attendance_data.get(str(day), '').strip()
-            if attendance_val != 'A':  # Not Sunday absent
-                # Regular Sunday - blue background for date column only
-                table.setStyle(TableStyle([
-                    ('BACKGROUND', (0, row_index), (0, row_index), colors.blue),
-                    ('TEXTCOLOR', (0, row_index), (0, row_index), colors.white),
-                    ('FONTNAME', (0, row_index), (0, row_index), 'Helvetica-Bold'),
-                ]))
-            else:
-                # Sunday absent - only date column blue, no background for P,OT,Bonus,Site columns
-                table.setStyle(TableStyle([
-                    ('BACKGROUND', (0, row_index), (0, row_index), colors.blue),
-                    ('TEXTCOLOR', (0, row_index), (0, row_index), colors.white),
-                    ('FONTNAME', (0, row_index), (0, row_index), 'Helvetica-Bold'),
-                ]))
+            # Sunday dates: black number + red (S)
+            table.setStyle(TableStyle([
+                ('TEXTCOLOR', (0, row_index), (0, row_index), colors.black),
+                ('FONTNAME', (0, row_index), (0, row_index), 'Helvetica-Bold'),
+            ]))
     
     table.wrapOn(p, width, height)
-    table.drawOn(p, margin, table_start_y - len(table_data) * 18)
+    table_y_position = table_start_y - len(table_data) * 18
+    table.drawOn(p, margin, table_y_position)
+    
+    # Draw red (S) for Sunday dates manually
+    for day in range(1, days_in_month + 1):
+        date_obj = datetime(record.year, month_num, day)
+        if date_obj.weekday() == 6:  # Sunday
+            row_index = day
+            # Calculate position for the (S) part with space
+            cell_y = table_y_position + (len(table_data) - row_index - 1) * 18 + 6
+            cell_x = margin + 0.3*inch + 6  # Move (S) further right with more space
+            
+            p.setFillColor(colors.red)
+            p.setFont("Helvetica-Bold", 9)
+            p.drawString(cell_x, cell_y, "(S)")
+            p.setFillColor(colors.black)  # Reset to black
     
     # Bottom section - exact match to full design image
     table_height = len(table_data) * 18
-    bottom_y = table_start_y - table_height - 5
+    bottom_y = table_y_position - 5
     
     # Create bottom section with 6 rows and 4 columns
     bottom_data = [

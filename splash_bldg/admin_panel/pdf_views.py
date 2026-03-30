@@ -425,7 +425,9 @@ def generate_attendance_pdf(request, record_id):
                 if not is_sunday:
                     total_ot_hours += 2
             elif attendance_value == 'A':
-                total_absent_days += 1
+                # Exclude Sunday absents from total absent calculation
+                if not is_sunday:
+                    total_absent_days += 1
             elif attendance_value == 'M':
                 total_medical_days += 1
             elif attendance_value == 'H':

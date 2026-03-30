@@ -43,7 +43,125 @@
     </div>
   </div>
 
+  <!-- Upload Document Modal -->
+  <div id="uploadModal" class="upload-modal" onclick="closeUploadModal(event)">
+    <div class="upload-modal-content" onclick="event.stopPropagation()">
+      <div class="upload-modal-header">
+        <h3>Upload Document</h3>
+        <button class="close-btn" onclick="closeUploadModal()">&times;</button>
+      </div>
+      <div class="upload-modal-body">
+        <div class="upload-card" onclick="window.location.href='{% url 'cheque_upload' %}'">
+          <i class="bi bi-file-earmark-check upload-card-icon"></i>
+          <h4>Cheque Upload</h4>
+          <p>Upload and process cheque documents</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .upload-modal {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      animation: fadeIn 0.3s;
+    }
+    .upload-modal.show {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .upload-modal-content {
+      background: white;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      animation: slideUp 0.3s;
+    }
+    .upload-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 24px;
+      border-bottom: 1px solid #e9ecef;
+    }
+    .upload-modal-header h3 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 600;
+    }
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 28px;
+      cursor: pointer;
+      color: #6c757d;
+      line-height: 1;
+    }
+    .close-btn:hover {
+      color: #000;
+    }
+    .upload-modal-body {
+      padding: 24px;
+    }
+    .upload-card {
+      border: 2px solid #e9ecef;
+      border-radius: 12px;
+      padding: 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .upload-card:hover {
+      border-color: #007bff;
+      background: #f8f9fa;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,123,255,0.15);
+    }
+    .upload-card-icon {
+      font-size: 48px;
+      color: #007bff;
+      margin-bottom: 16px;
+    }
+    .upload-card h4 {
+      margin: 0 0 8px 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: #212529;
+    }
+    .upload-card p {
+      margin: 0;
+      color: #6c757d;
+      font-size: 14px;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+  </style>
+
   <script>
+    function openUploadModal() {
+      document.getElementById('uploadModal').classList.add('show');
+    }
+    
+    function closeUploadModal(event) {
+      if (!event || event.target.id === 'uploadModal') {
+        document.getElementById('uploadModal').classList.remove('show');
+      }
+    }
+
     function toggleSidebar() {
       const sidebar = document.getElementById('sidebar');
       sidebar.classList.toggle('collapsed');
